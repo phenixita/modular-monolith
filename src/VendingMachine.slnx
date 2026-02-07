@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="VendingMachine.Cash/VendingMachine.Cash.csproj" />
+  <Project Path="VendingMachine.Cli/VendingMachine.Cli.csproj" />
+  <Project Path="VendingMachine.Inventory/VendingMachine.Inventory.csproj" />
+  <Project Path="VendingMachine.Orders/VendingMachine.Orders.csproj" />
+</Solution>
