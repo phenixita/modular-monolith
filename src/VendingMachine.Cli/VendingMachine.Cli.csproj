@@ -7,8 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\VendingMachine.Cash\VendingMachine.Cash.csproj" />
-    <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" />
-    <ProjectReference Include="..\VendingMachine.Orders\VendingMachine.Orders.csproj" />
+    <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" /> 
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MediatR" Version="11.0.0" />
