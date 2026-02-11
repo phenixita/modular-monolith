@@ -10,32 +10,53 @@ public sealed class PlaceOrderHandler(IMediator mediator) : IRequestHandler<Plac
     public async Task<OrderReceipt> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
     {
         var normalizedCode = NormalizeCode(request.Code);
-        var product = await mediator.Send(new GetProductByCodeQuery(normalizedCode), cancellationToken);
-        var stock = await mediator.Send(new GetStockQuery(normalizedCode), cancellationToken);
-        var balance = await mediator.Send(new GetBalanceQuery(), cancellationToken);
+        var product = await FetchProduct(normalizedCode, cancellationToken);
+        var currentStock = await FetchCurrentStock(normalizedCode, cancellationToken);
+        var currentBalance = await FetchCurrentBalance(cancellationToken);
 
-        if (stock <= 0)
-        {
-            throw new InvalidOperationException($"Product {normalizedCode} is out of stock.");
-        }
+        EnsureStockIsAvailable(normalizedCode, currentStock);
+        EnsureBalanceIsSufficient(product.Price, currentBalance);
 
-        if (balance < product.Price)
-        {
-            throw new InvalidOperationException(
-                $"Insufficient balance. Price is {FormatMoney(product.Price)}, balance is {FormatMoney(balance)}.");
-        }
+        await ChargeCustomerCash(product.Price, cancellationToken);
+        await RemoveProductFromStock(normalizedCode, cancellationToken);
 
-        await mediator.Send(new ChargeCashCommand(product.Price), cancellationToken);
-        await mediator.Send(new RemoveStockCommand(normalizedCode, 1), cancellationToken);
-
-        var updatedBalance = await mediator.Send(new GetBalanceQuery(), cancellationToken);
-        var updatedStock = await mediator.Send(new GetStockQuery(normalizedCode), cancellationToken);
+        var updatedBalance = await FetchCurrentBalance(cancellationToken);
+        var updatedStock = await FetchCurrentStock(normalizedCode, cancellationToken);
 
         return new OrderReceipt(normalizedCode, product.Price, updatedBalance, updatedStock);
     }
 
-    private static string FormatMoney(decimal amount) =>
-        amount.ToString("0.00", CultureInfo.InvariantCulture);
+    private async Task<Product> FetchProduct(string code, CancellationToken cancellationToken) =>
+        await mediator.Send(new GetProductByCodeQuery(code), cancellationToken);
+
+    private async Task<int> FetchCurrentStock(string code, CancellationToken cancellationToken) =>
+        await mediator.Send(new GetStockQuery(code), cancellationToken);
+
+    private async Task<decimal> FetchCurrentBalance(CancellationToken cancellationToken) =>
+        await mediator.Send(new GetBalanceQuery(), cancellationToken);
+
+    private async Task ChargeCustomerCash(decimal amount, CancellationToken cancellationToken) =>
+        await mediator.Send(new ChargeCashCommand(amount), cancellationToken);
+
+    private async Task RemoveProductFromStock(string code, CancellationToken cancellationToken) =>
+        await mediator.Send(new RemoveStockCommand(code, 1), cancellationToken);
+
+    private static void EnsureStockIsAvailable(string code, int stock)
+    {
+        if (stock <= 0)
+        {
+            throw new InvalidOperationException($"Product {code} is out of stock.");
+        }
+    }
+
+    private static void EnsureBalanceIsSufficient(decimal price, decimal balance)
+    {
+        if (balance < price)
+        {
+            throw new InvalidOperationException(
+                $"Insufficient balance. Price is {FormatMoney(price)}, balance is {FormatMoney(balance)}.");
+        }
+    }
 
     private static string NormalizeCode(string code)
     {
@@ -46,4 +67,7 @@ public sealed class PlaceOrderHandler(IMediator mediator) : IRequestHandler<Plac
 
         return code.Trim().ToUpperInvariant();
     }
+
+    private static string FormatMoney(decimal amount) =>
+        amount.ToString("0.00", CultureInfo.InvariantCulture);
 }
