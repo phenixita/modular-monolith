@@ -52,3 +52,18 @@ Examples:
 	| initial_balance | refunded_amount | refund_command  |
 	| 1.50            | 1.50            | vm cash refund  |
 	| 3.00            | 3.00            | vm cash refund  |
+
+Scenario Outline: piazzo un ordine e aggiorno saldo e stock via CLI
+
+Given la vending machine e' disponibile
+And il prodotto <product_code> esiste in catalogo
+And lo stock iniziale per <product_code> e' <initial_stock>
+And il saldo iniziale e' <initial_balance>
+When eseguo il comando <order_command> per ordinare <product_code>
+Then il saldo e' <expected_balance>
+And lo stock per <product_code> e' <expected_stock>
+
+Examples:
+	| product_code | initial_stock | initial_balance | expected_balance | expected_stock | order_command          |
+	| COLA         | 5             | 2.00            | 0.00            | 4              | vm order COLA          |
+	| WATER        | 10            | 1.00            | 0.00            | 9              | vm order WATER         |
