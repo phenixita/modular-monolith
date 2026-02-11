@@ -6,18 +6,29 @@ public sealed class ChargeCashHandler(ICashStorage storage) : IRequestHandler<Ch
 {
     public Task<Unit> Handle(ChargeCashCommand request, CancellationToken cancellationToken)
     {
-        if (request.Amount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(request.Amount), "Amount must be positive.");
-        }
-
+        ValidateAmountIsPositive(request.Amount);
         var balance = storage.GetBalance();
-        if (balance < request.Amount)
+        EnsureBalanceIsSufficient(balance, request.Amount);
+        DeductAmountFromBalance(balance, request.Amount);
+        return Task.FromResult(Unit.Value);
+    }
+
+    private static void ValidateAmountIsPositive(decimal amount)
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive.");
+        }
+    }
+
+    private static void EnsureBalanceIsSufficient(decimal balance, decimal amount)
+    {
+        if (balance < amount)
         {
             throw new InvalidOperationException("Insufficient balance.");
         }
-
-        storage.SetBalance(balance - request.Amount);
-        return Task.FromResult(Unit.Value);
     }
+
+    private void DeductAmountFromBalance(decimal balance, decimal amount) =>
+        storage.SetBalance(balance - amount);
 }

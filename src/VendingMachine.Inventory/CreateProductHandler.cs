@@ -8,19 +8,21 @@ public sealed class CreateProductHandler(IInventoryRepository repository)
     public async Task<Unit> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
         EnsureValidPrice(request.Product.Price);
+        await EnsureProductDoesNotExist(request.Product.Code, cancellationToken);
+        await repository.AddOrUpdateAsync(request.Product, cancellationToken);
+        return Unit.Value;
+    }
 
+    private async Task EnsureProductDoesNotExist(string code, CancellationToken cancellationToken)
+    {
         try
         {
-            await repository.GetByCodeAsync(request.Product.Code, cancellationToken);
+            await repository.GetByCodeAsync(code, cancellationToken);
             throw new InvalidOperationException("Product already exists.");
         }
         catch (KeyNotFoundException)
         {
-            // Expected when the product does not exist.
         }
-
-        await repository.AddOrUpdateAsync(request.Product, cancellationToken);
-        return Unit.Value;
     }
 
     private static void EnsureValidPrice(decimal price)

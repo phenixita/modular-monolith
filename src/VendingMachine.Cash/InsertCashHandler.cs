@@ -6,13 +6,23 @@ public sealed class InsertCashHandler(ICashStorage storage) : IRequestHandler<In
 {
     public Task<Unit> Handle(InsertCashCommand request, CancellationToken cancellationToken)
     {
-        if (request.Amount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(request.Amount), "Amount must be positive.");
-        }
-
-        var updatedBalance = storage.GetBalance() + request.Amount;
-        storage.SetBalance(updatedBalance);
+        ValidateAmountIsPositive(request.Amount);
+        var updatedBalance = CalculateUpdatedBalance(request.Amount);
+        PersistUpdatedBalance(updatedBalance);
         return Task.FromResult(Unit.Value);
     }
+
+    private static void ValidateAmountIsPositive(decimal amount)
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive.");
+        }
+    }
+
+    private decimal CalculateUpdatedBalance(decimal amount) =>
+        storage.GetBalance() + amount;
+
+    private void PersistUpdatedBalance(decimal balance) =>
+        storage.SetBalance(balance);
 }

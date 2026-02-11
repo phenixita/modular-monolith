@@ -7,13 +7,20 @@ public sealed class DeleteProductHandler(IInventoryRepository repository)
 {
     public async Task<Unit> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
-        var quantity = await repository.GetQuantityAsync(request.Code, cancellationToken);
+        var quantity = await FetchProductQuantity(request.Code, cancellationToken);
+        EnsureProductStockIsEmpty(quantity);
+        await repository.DeleteAsync(request.Code, cancellationToken);
+        return Unit.Value;
+    }
+
+    private async Task<int> FetchProductQuantity(string code, CancellationToken cancellationToken) =>
+        await repository.GetQuantityAsync(code, cancellationToken);
+
+    private static void EnsureProductStockIsEmpty(int quantity)
+    {
         if (quantity > 0)
         {
             throw new InvalidOperationException("Product must have zero stock to be deleted.");
         }
-
-        await repository.DeleteAsync(request.Code, cancellationToken);
-        return Unit.Value;
     }
 }
