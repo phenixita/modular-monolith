@@ -1,10 +1,16 @@
 namespace VendingMachine.Cash;
 
-public sealed class CashRegister
+public sealed class CashRegister : ICashRegister
 {
-    private decimal _balance;
+    private readonly ICashStorage _storage;
 
-    public decimal Balance => _balance;
+    public CashRegister(ICashStorage storage)
+    {
+        _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+        _storage.EnsureCreated();
+    }
+
+    public decimal Balance => _storage.GetBalance();
 
     public void Insert(decimal amount)
     {
@@ -13,7 +19,8 @@ public sealed class CashRegister
             throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive.");
         }
 
-        _balance += amount;
+        var updatedBalance = _storage.GetBalance() + amount;
+        _storage.SetBalance(updatedBalance);
     }
 
     public void Charge(decimal amount)
@@ -23,18 +30,19 @@ public sealed class CashRegister
             throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive.");
         }
 
-        if (_balance < amount)
+        var balance = _storage.GetBalance();
+        if (balance < amount)
         {
             throw new InvalidOperationException("Insufficient balance.");
         }
 
-        _balance -= amount;
+        _storage.SetBalance(balance - amount);
     }
 
     public decimal RefundAll()
     {
-        var refund = _balance;
-        _balance = 0;
+        var refund = _storage.GetBalance();
+        _storage.SetBalance(0m);
         return refund;
     }
 }

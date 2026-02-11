@@ -22,7 +22,7 @@ public sealed class OrderService
 
         if (_stockRoom.GetQuantity(product.Code) <= 0)
         {
-            return OrderResult.OutOfStock(product);
+            return OrderResult.OutOfStock(product, _cashRegister.Balance);
         }
 
         try
@@ -35,6 +35,6 @@ public sealed class OrderService
         }
 
         _stockRoom.RemoveStock(product.Code, 1);
-        return OrderResult.Success(product);
+        return OrderResult.Success(product, _cashRegister.Balance);
     }
 }

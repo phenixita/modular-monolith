@@ -5,12 +5,13 @@ using Xunit;
 
 namespace VendingMachine.Orders.Tests.L0;
 
+[Trait("Level", "L0")]
 public sealed class OrderServiceTests
 {
     [Fact]
     public void Purchase_ReturnsSuccess_WhenEnoughBalanceAndStock()
     {
-        var cashRegister = new CashRegister();
+        var cashRegister = new CashRegister(new InMemoryCashStorage());
         var catalog = new InventoryCatalog();
         var stockRoom = new StockRoom();
         var service = new OrderService(cashRegister, catalog, stockRoom);
@@ -22,13 +23,17 @@ public sealed class OrderServiceTests
         var result = service.Purchase("C01");
 
         Assert.Equal(OrderStatus.Success, result.Status);
+        Assert.Equal(1.20m, result.ChargedAmount);
+        Assert.Equal(0.80m, result.RemainingBalance);
+        Assert.Null(result.Message);
         Assert.Equal(1, stockRoom.GetQuantity("C01"));
+        Assert.Equal(0.80m, cashRegister.Balance);
     }
 
     [Fact]
     public void Purchase_ReturnsOutOfStock_WhenNoInventory()
     {
-        var cashRegister = new CashRegister();
+        var cashRegister = new CashRegister(new InMemoryCashStorage());
         var catalog = new InventoryCatalog();
         var stockRoom = new StockRoom();
         var service = new OrderService(cashRegister, catalog, stockRoom);
@@ -39,12 +44,15 @@ public sealed class OrderServiceTests
         var result = service.Purchase("S01");
 
         Assert.Equal(OrderStatus.OutOfStock, result.Status);
+        Assert.Equal(0m, result.ChargedAmount);
+        Assert.Equal(2.00m, result.RemainingBalance);
+        Assert.Equal(2.00m, cashRegister.Balance);
     }
 
     [Fact]
     public void Purchase_ReturnsInsufficientFunds_WhenBalanceTooLow()
     {
-        var cashRegister = new CashRegister();
+        var cashRegister = new CashRegister(new InMemoryCashStorage());
         var catalog = new InventoryCatalog();
         var stockRoom = new StockRoom();
         var service = new OrderService(cashRegister, catalog, stockRoom);
@@ -55,6 +63,8 @@ public sealed class OrderServiceTests
         var result = service.Purchase("B01");
 
         Assert.Equal(OrderStatus.InsufficientFunds, result.Status);
+        Assert.Equal(0m, result.ChargedAmount);
+        Assert.Equal(0m, result.RemainingBalance);
         Assert.Equal(1, stockRoom.GetQuantity("B01"));
     }
 }

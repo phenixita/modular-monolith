@@ -1,6 +1,9 @@
 <Solution>
   <Project Path="VendingMachine.Cash/VendingMachine.Cash.csproj" />
+  <Project Path="VendingMachine.Cash.Abstractions/VendingMachine.Cash.Abstractions.csproj" />
+  <Project Path="VendingMachine.Cash.Tests.L0/VendingMachine.Cash.Tests.L0.csproj" />
+  <Project Path="VendingMachine.Cash.Tests.L1/VendingMachine.Cash.Tests.L1.csproj" />
   <Project Path="VendingMachine.Cli/VendingMachine.Cli.csproj" />
   <Project Path="VendingMachine.Inventory/VendingMachine.Inventory.csproj" />
-  <Project Path="VendingMachine.Orders/VendingMachine.Orders.csproj" />
+  <Project Path="VendingMachine.Inventory.Tests.L0/VendingMachine.Inventory.Tests.L0.csproj" />
 </Solution>

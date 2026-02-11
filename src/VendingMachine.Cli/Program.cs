@@ -14,6 +14,7 @@ var mongoDatabase = Environment.GetEnvironmentVariable("MONGO_DATABASE") ?? Defa
 var postgresConnection = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING") ?? DefaultPostgresConnection;
 
 var services = new ServiceCollection();
+services.AddSingleton<ICashStorage>(_ => new PostgresCashStorage(postgresConnection));
 services.AddSingleton<CashRegister>();
 services.AddSingleton<IInventoryRepository>(_ => new MongoInventoryRepository(mongoConnection, mongoDatabase));
 services.AddSingleton<IOrderRepository>(_ => new PostgresOrderRepository(postgresConnection));
@@ -22,6 +23,8 @@ services.AddMediatR(typeof(CashRegister).Assembly, typeof(InventoryCatalog).Asse
 using var provider = services.BuildServiceProvider();
 var mediator = provider.GetRequiredService<IMediator>();
 var orderRepository = provider.GetRequiredService<IOrderRepository>();
+var cashStorage = provider.GetRequiredService<ICashStorage>();
+cashStorage.EnsureCreated();
 await orderRepository.EnsureCreatedAsync();
 await SeedDataAsync(mediator);
 

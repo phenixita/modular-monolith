@@ -3,6 +3,7 @@ using Xunit;
 
 namespace VendingMachine.Inventory.Tests.L0;
 
+[Trait("Level", "L0")]
 public sealed class StockRoomTests
 {
     [Fact]

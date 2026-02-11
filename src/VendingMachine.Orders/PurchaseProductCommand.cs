@@ -16,7 +16,8 @@ public sealed class PurchaseProductHandler(IMediator mediator, IOrderRepository 
 
         if (stock <= 0)
         {
-            var outOfStock = OrderResult.OutOfStock(product);
+            var balance = await mediator.Send(new GetBalanceQuery(), cancellationToken);
+            var outOfStock = OrderResult.OutOfStock(product, balance);
             await orders.AddAsync(CreateOrder(outOfStock), cancellationToken);
             return outOfStock;
         }
@@ -34,7 +35,8 @@ public sealed class PurchaseProductHandler(IMediator mediator, IOrderRepository 
         }
 
         await mediator.Send(new RemoveStockCommand(product.Code, 1), cancellationToken);
-        var success = OrderResult.Success(product);
+        var remainingBalance = await mediator.Send(new GetBalanceQuery(), cancellationToken);
+        var success = OrderResult.Success(product, remainingBalance);
         await orders.AddAsync(CreateOrder(success), cancellationToken);
         return success;
     }
