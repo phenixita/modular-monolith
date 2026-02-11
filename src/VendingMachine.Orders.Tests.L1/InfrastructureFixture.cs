@@ -64,10 +64,10 @@ public sealed class InfrastructureFixture : IAsyncLifetime
 
         var services = new ServiceCollection();
         services.AddSingleton<ICashStorage, InMemoryCashStorage>();
-        services.AddSingleton<CashRegister>();
+        services.AddSingleton<CashRegisterService>();
         services.AddSingleton<IInventoryRepository>(InventoryRepository);
         services.AddSingleton<IOrderRepository>(OrderRepository);
-        services.AddMediatR(typeof(CashRegister).Assembly, typeof(InventoryCatalog).Assembly, typeof(OrderService).Assembly);
+        services.AddMediatR(typeof(CashRegisterService).Assembly, typeof(InventoryCatalog).Assembly, typeof(OrderService).Assembly);
 
         _provider = services.BuildServiceProvider();
         _providerDisposable = _provider as IDisposable;

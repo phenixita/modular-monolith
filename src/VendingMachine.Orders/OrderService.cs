@@ -5,11 +5,11 @@ namespace VendingMachine.Orders;
 
 public sealed class OrderService
 {
-    private readonly CashRegister _cashRegister;
+    private readonly ICashRegisterService _cashRegister;
     private readonly InventoryCatalog _catalog;
     private readonly StockRoom _stockRoom;
 
-    public OrderService(CashRegister cashRegister, InventoryCatalog catalog, StockRoom stockRoom)
+    public OrderService(ICashRegisterService cashRegister, InventoryCatalog catalog, StockRoom stockRoom)
     {
         _cashRegister = cashRegister ?? throw new ArgumentNullException(nameof(cashRegister));
         _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));

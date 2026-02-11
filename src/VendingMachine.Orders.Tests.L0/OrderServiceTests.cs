@@ -1,3 +1,5 @@
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Orders;
@@ -11,7 +13,7 @@ public sealed class OrderServiceTests
     [Fact]
     public void Purchase_ReturnsSuccess_WhenEnoughBalanceAndStock()
     {
-        var cashRegister = new CashRegister(new InMemoryCashStorage());
+        var cashRegister = BuildRegister(new InMemoryCashStorage());
         var catalog = new InventoryCatalog();
         var stockRoom = new StockRoom();
         var service = new OrderService(cashRegister, catalog, stockRoom);
@@ -33,7 +35,7 @@ public sealed class OrderServiceTests
     [Fact]
     public void Purchase_ReturnsOutOfStock_WhenNoInventory()
     {
-        var cashRegister = new CashRegister(new InMemoryCashStorage());
+        var cashRegister = BuildRegister(new InMemoryCashStorage());
         var catalog = new InventoryCatalog();
         var stockRoom = new StockRoom();
         var service = new OrderService(cashRegister, catalog, stockRoom);
@@ -52,7 +54,7 @@ public sealed class OrderServiceTests
     [Fact]
     public void Purchase_ReturnsInsufficientFunds_WhenBalanceTooLow()
     {
-        var cashRegister = new CashRegister(new InMemoryCashStorage());
+        var cashRegister = BuildRegister(new InMemoryCashStorage());
         var catalog = new InventoryCatalog();
         var stockRoom = new StockRoom();
         var service = new OrderService(cashRegister, catalog, stockRoom);
@@ -66,5 +68,14 @@ public sealed class OrderServiceTests
         Assert.Equal(0m, result.ChargedAmount);
         Assert.Equal(0m, result.RemainingBalance);
         Assert.Equal(1, stockRoom.GetQuantity("B01"));
+    }
+
+    private static ICashRegisterService BuildRegister(ICashStorage storage)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(storage);
+        services.AddMediatR(typeof(CashRegisterService).Assembly);
+        services.AddSingleton<CashRegisterService>();
+        return services.BuildServiceProvider().GetRequiredService<CashRegisterService>();
     }
 }
