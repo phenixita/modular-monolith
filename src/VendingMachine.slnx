@@ -11,5 +11,10 @@
     <Project Path="VendingMachine.Inventory.Tests.L1/VendingMachine.Inventory.Tests.L1.csproj" />
     <Project Path="VendingMachine.Inventory/VendingMachine.Inventory.csproj" />
   </Folder>
+  <Folder Name="/Orders/">
+    <Project Path="VendingMachine.Orders/VendingMachine.Orders.csproj" />
+    <Project Path="VendingMachine.Orders.Tests.L0/VendingMachine.Orders.Tests.L0.csproj" />
+    <Project Path="VendingMachine.Orders.Tests.L1/VendingMachine.Orders.Tests.L1.csproj" />
+  </Folder>
   <Project Path="VendingMachine.Cli/VendingMachine.Cli.csproj" />
 </Solution>

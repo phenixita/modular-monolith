@@ -1,10 +1,7 @@
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.Globalization;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Cash;
-using VendingMachine.Inventory;
+using VendingMachine.Orders;
 
 internal static class OrderCommands
 {
@@ -25,39 +22,20 @@ internal static class OrderCommands
                 var config = CliConfigurationLoader.Load(configFile);
                 using var provider = CliServiceProviderFactory.Build(config);
                 using var scope = provider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
 
                 var normalizedCode = CliParsing.EnsureCode(code);
-                var product = await mediator.Send(new GetProductByCodeQuery(normalizedCode));
-                var stock = await mediator.Send(new GetStockQuery(normalizedCode));
-                var balance = await mediator.Send(new GetBalanceQuery());
-
-                if (stock <= 0)
-                {
-                    throw new InvalidOperationException($"Product {normalizedCode} is out of stock.");
-                }
-
-                if (balance < product.Price)
-                {
-                    throw new InvalidOperationException(
-                        $"Insufficient balance. Price is {CliParsing.FormatMoney(product.Price)}, balance is {CliParsing.FormatMoney(balance)}.");
-                }
-
-                await mediator.Send(new ChargeCashCommand(product.Price));
-                await mediator.Send(new RemoveStockCommand(normalizedCode, 1));
-
-                var updatedBalance = await mediator.Send(new GetBalanceQuery());
-                var updatedStock = await mediator.Send(new GetStockQuery(normalizedCode));
+                var receipt = await orderService.PlaceOrder(normalizedCode);
 
                 CliOutputWriter.Write(format,
                     new
                     {
-                        productCode = normalizedCode,
-                        price = product.Price,
-                        balance = updatedBalance,
-                        stock = updatedStock
+                        productCode = receipt.ProductCode,
+                        price = receipt.Price,
+                        balance = receipt.Balance,
+                        stock = receipt.Stock
                     },
-                    $"Order placed for {normalizedCode}.{Environment.NewLine}Balance: {CliParsing.FormatMoney(updatedBalance)}{Environment.NewLine}Stock: {updatedStock.ToString(CultureInfo.InvariantCulture)}");
+                    $"Order placed for {receipt.ProductCode}.{Environment.NewLine}Balance: {CliParsing.FormatMoney(receipt.Balance)}{Environment.NewLine}Stock: {receipt.Stock.ToString(CultureInfo.InvariantCulture)}");
             }, context);
         });
 
