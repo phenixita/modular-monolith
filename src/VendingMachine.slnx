@@ -6,6 +6,7 @@
     <Project Path="VendingMachine.Cash/VendingMachine.Cash.csproj" />
   </Folder>
   <Folder Name="/Inventory/">
+    <Project Path="VendingMachine.Inventory.Abstractions/VendingMachine.Inventory.Abstractions.csproj" />
     <Project Path="VendingMachine.Inventory.Tests.L0/VendingMachine.Inventory.Tests.L0.csproj" />
     <Project Path="VendingMachine.Inventory.Tests.L1/VendingMachine.Inventory.Tests.L1.csproj" />
     <Project Path="VendingMachine.Inventory/VendingMachine.Inventory.csproj" />

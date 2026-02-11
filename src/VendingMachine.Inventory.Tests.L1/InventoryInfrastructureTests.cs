@@ -166,9 +166,112 @@ public sealed class InventoryInfrastructureTests
         {
             var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
 
-            // Act & Assert - Try to remove stock from a product that doesn't exist
-            await Assert.ThrowsAsync<InvalidOperationException>(
+            await Assert.ThrowsAsync<KeyNotFoundException>(
                 async () => await repository.RemoveStockAsync("UNKNOWN", 5)
+            );
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task CreateProduct_PersistsInMongoDB()
+    {
+        // Arrange
+        var fixture = new InfrastructureFixture();
+        await fixture.InitializeAsync();
+        try
+        {
+            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var handler = new CreateProductHandler(repository1);
+            var product = new Product("COLA", "Coca Cola", 1.50m);
+
+            // Act
+            await handler.Handle(new CreateProductCommand(product), CancellationToken.None);
+
+            // Assert
+            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var stored = await repository2.GetByCodeAsync("COLA");
+            Assert.Equal(1.50m, stored.Price);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task UpdateProduct_PersistsPriceInMongoDB()
+    {
+        // Arrange
+        var fixture = new InfrastructureFixture();
+        await fixture.InitializeAsync();
+        try
+        {
+            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            await repository1.AddOrUpdateAsync(new Product("WATER", "Water", 1.00m));
+            var handler = new UpdateProductHandler(repository1);
+
+            // Act
+            await handler.Handle(new UpdateProductCommand(new Product("WATER", "Water", 1.25m)), CancellationToken.None);
+
+            // Assert
+            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var stored = await repository2.GetByCodeAsync("WATER");
+            Assert.Equal(1.25m, stored.Price);
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task DeleteProduct_WithZeroStock_RemovesProductInMongoDB()
+    {
+        // Arrange
+        var fixture = new InfrastructureFixture();
+        await fixture.InitializeAsync();
+        try
+        {
+            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            await repository1.AddOrUpdateAsync(new Product("JUICE", "Orange Juice", 2.00m));
+            await repository1.SetStockAsync("JUICE", 0);
+            var handler = new DeleteProductHandler(repository1);
+
+            // Act
+            await handler.Handle(new DeleteProductCommand("JUICE"), CancellationToken.None);
+
+            // Assert
+            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            await Assert.ThrowsAsync<KeyNotFoundException>(
+                async () => await repository2.GetByCodeAsync("JUICE")
+            );
+        }
+        finally
+        {
+            await fixture.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task DeleteProduct_WithStock_ThrowsException()
+    {
+        // Arrange
+        var fixture = new InfrastructureFixture();
+        await fixture.InitializeAsync();
+        try
+        {
+            var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            await repository.AddOrUpdateAsync(new Product("TEA", "Tea", 0.80m));
+            await repository.SetStockAsync("TEA", 2);
+            var handler = new DeleteProductHandler(repository);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await handler.Handle(new DeleteProductCommand("TEA"), CancellationToken.None)
             );
         }
         finally

@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\VendingMachine.Inventory.Abstractions\VendingMachine.Inventory.Abstractions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="MediatR" Version="11.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="3.6.0" />
   </ItemGroup>

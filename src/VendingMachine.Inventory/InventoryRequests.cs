@@ -41,6 +41,80 @@ public sealed class UpsertProductHandler(IInventoryRepository repository)
     }
 }
 
+public sealed record CreateProductCommand(Product Product) : IRequest<Unit>;
+
+public sealed class CreateProductHandler(IInventoryRepository repository)
+    : IRequestHandler<CreateProductCommand, Unit>
+{
+    public async Task<Unit> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    {
+        EnsureValidPrice(request.Product.Price);
+
+        try
+        {
+            await repository.GetByCodeAsync(request.Product.Code, cancellationToken);
+            throw new InvalidOperationException("Product already exists.");
+        }
+        catch (KeyNotFoundException)
+        {
+            // Expected when the product does not exist.
+        }
+
+        await repository.AddOrUpdateAsync(request.Product, cancellationToken);
+        return Unit.Value;
+    }
+
+    private static void EnsureValidPrice(decimal price)
+    {
+        if (price < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(price), "Price must be zero or positive.");
+        }
+    }
+}
+
+public sealed record UpdateProductCommand(Product Product) : IRequest<Unit>;
+
+public sealed class UpdateProductHandler(IInventoryRepository repository)
+    : IRequestHandler<UpdateProductCommand, Unit>
+{
+    public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+    {
+        EnsureValidPrice(request.Product.Price);
+
+        await repository.GetByCodeAsync(request.Product.Code, cancellationToken);
+        await repository.AddOrUpdateAsync(request.Product, cancellationToken);
+
+        return Unit.Value;
+    }
+
+    private static void EnsureValidPrice(decimal price)
+    {
+        if (price < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(price), "Price must be zero or positive.");
+        }
+    }
+}
+
+public sealed record DeleteProductCommand(string Code) : IRequest<Unit>;
+
+public sealed class DeleteProductHandler(IInventoryRepository repository)
+    : IRequestHandler<DeleteProductCommand, Unit>
+{
+    public async Task<Unit> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
+    {
+        var quantity = await repository.GetQuantityAsync(request.Code, cancellationToken);
+        if (quantity > 0)
+        {
+            throw new InvalidOperationException("Product must have zero stock to be deleted.");
+        }
+
+        await repository.DeleteAsync(request.Code, cancellationToken);
+        return Unit.Value;
+    }
+}
+
 public sealed record AddStockCommand(string Code, int Quantity) : IRequest<Unit>;
 
 public sealed class AddStockHandler(IInventoryRepository repository)

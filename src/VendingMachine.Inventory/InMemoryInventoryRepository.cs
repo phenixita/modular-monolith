@@ -51,6 +51,17 @@ public sealed class InMemoryInventoryRepository : IInventoryRepository
         return Task.CompletedTask;
     }
 
+    public Task DeleteAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var normalized = NormalizeCode(code);
+        if (!_items.Remove(normalized))
+        {
+            throw new KeyNotFoundException($"Unknown product code '{code}'.");
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task AddStockAsync(string code, int quantity, CancellationToken cancellationToken = default)
     {
         if (quantity <= 0)

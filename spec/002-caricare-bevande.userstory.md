@@ -5,6 +5,7 @@ As a maintenance user I want to load and unload beverages into the vending machi
 Scenario Outline: load beverages
 
 Given the vending machine is available
+And the product codes already exist in the system
 And the current stock for product <product_code> is <initial_stock>
 When I load <quantity> units of product <product_code>
 Then the stock for product <product_code> is <expected_stock>
@@ -18,6 +19,7 @@ Examples:
 Scenario Outline: unload beverages
 
 Given the vending machine is available
+And the product codes already exist in the system
 And the current stock for product <product_code> is <initial_stock>
 When I unload <quantity> units of product <product_code>
 Then the stock for product <product_code> is <expected_stock>

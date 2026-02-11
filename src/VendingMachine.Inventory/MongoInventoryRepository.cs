@@ -72,6 +72,17 @@ public sealed class MongoInventoryRepository : IInventoryRepository
         return _items.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true }, cancellationToken);
     }
 
+    public async Task DeleteAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var normalized = NormalizeCode(code);
+        var result = await _items.DeleteOneAsync(document => document.Code == normalized, cancellationToken);
+
+        if (result.DeletedCount == 0)
+        {
+            throw new KeyNotFoundException($"Unknown product code '{code}'.");
+        }
+    }
+
     public async Task AddStockAsync(string code, int quantity, CancellationToken cancellationToken = default)
     {
         if (quantity <= 0)
@@ -100,6 +111,11 @@ public sealed class MongoInventoryRepository : IInventoryRepository
         var normalized = NormalizeCode(code);
         var item = await _items.Find(document => document.Code == normalized)
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (item is null)
+        {
+            throw new KeyNotFoundException($"Unknown product code '{code}'.");
+        }
 
         var available = item?.Quantity ?? 0;
         if (available < quantity)
