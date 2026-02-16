@@ -5,7 +5,7 @@ using VendingMachine.Inventory;
 
 namespace VendingMachine.Orders;
 
-public sealed class PlaceOrderHandler(IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderReceipt>
+internal sealed class PlaceOrderHandler(IMediator mediator) : IRequestHandler<PlaceOrderCommand, OrderReceipt>
 {
     public async Task<OrderReceipt> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
     {
