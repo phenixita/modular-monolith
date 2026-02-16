@@ -6,7 +6,6 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VendingMachine.Inventory.Abstractions\VendingMachine.Inventory.Abstractions.csproj" />
     <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" />
   </ItemGroup>
   <ItemGroup>
