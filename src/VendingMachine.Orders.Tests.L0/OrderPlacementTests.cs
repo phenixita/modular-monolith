@@ -87,9 +87,9 @@ public sealed class OrderPlacementTests
         services.AddSingleton(storage);
         services.AddSingleton(repository);
         services.AddMediatR(
-            typeof(PlaceOrderCommand).Assembly,
-            typeof(ChargeCashCommand).Assembly,
-            typeof(GetProductByCodeQuery).Assembly);
+            typeof(OrderService).Assembly,
+            typeof(CashRegisterService).Assembly,
+            typeof(InventoryService).Assembly);
         services.AddSingleton<IOrderService, OrderService>();
         return services.BuildServiceProvider();
     }

@@ -1,7 +1,6 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Globalization;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Inventory;
 
@@ -33,11 +32,11 @@ internal static class InventoryCommands
                 var config = CliConfigurationLoader.Load(configFile);
                 using var provider = CliServiceProviderFactory.Build(config);
                 using var scope = provider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var inventoryService = scope.ServiceProvider.GetRequiredService<IInventoryService>();
 
                 var normalizedCode = CliParsing.EnsureCode(code);
                 var product = new Product(normalizedCode, normalizedCode, price);
-                await mediator.Send(new CreateProductCommand(product));
+                await inventoryService.CreateProduct(product);
 
                 CliOutputWriter.Write(format,
                     new { productCode = product.Code, price },
@@ -69,11 +68,11 @@ internal static class InventoryCommands
                 var config = CliConfigurationLoader.Load(configFile);
                 using var provider = CliServiceProviderFactory.Build(config);
                 using var scope = provider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var inventoryService = scope.ServiceProvider.GetRequiredService<IInventoryService>();
 
                 var normalizedCode = CliParsing.EnsureCode(code);
-                await mediator.Send(new AddStockCommand(normalizedCode, quantity));
-                var updatedStock = await mediator.Send(new GetStockQuery(normalizedCode));
+                await inventoryService.AddStock(normalizedCode, quantity);
+                var updatedStock = await inventoryService.GetStock(normalizedCode);
 
                 CliOutputWriter.Write(format,
                     new { productCode = normalizedCode, stock = updatedStock },

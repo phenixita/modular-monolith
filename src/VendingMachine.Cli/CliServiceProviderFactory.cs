@@ -11,13 +11,15 @@ internal static class CliServiceProviderFactory
         var services = new ServiceCollection();
 
         services.AddMediatR(
-            typeof(CreateProductCommand).Assembly,
-            typeof(InsertCashCommand).Assembly,
-            typeof(PlaceOrderCommand).Assembly);
+            typeof(InventoryService).Assembly,
+            typeof(CashRegisterService).Assembly,
+            typeof(OrderService).Assembly);
 
         services.AddSingleton<IInventoryRepository>(
             new MongoInventoryRepository(config.Mongo.ConnectionString, config.Mongo.Database));
         services.AddSingleton<ICashStorage>(new PostgresCashStorage(config.Postgres.ConnectionString));
+        services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IOrderService, OrderService>();
 
         return services.BuildServiceProvider();

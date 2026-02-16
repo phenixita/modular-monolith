@@ -1,6 +1,5 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Cash;
 
@@ -26,10 +25,10 @@ internal static class CashCommands
                 var config = CliConfigurationLoader.Load(configFile);
                 using var provider = CliServiceProviderFactory.Build(config);
                 using var scope = provider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var cashService = scope.ServiceProvider.GetRequiredService<ICashRegisterService>();
 
-                await mediator.Send(new InsertCashCommand(amount));
-                var balance = await mediator.Send(new GetBalanceQuery());
+                await cashService.Insert(amount);
+                var balance = cashService.Balance;
 
                 CliOutputWriter.Write(format,
                     new { balance },
@@ -48,9 +47,9 @@ internal static class CashCommands
                 var config = CliConfigurationLoader.Load(configFile);
                 using var provider = CliServiceProviderFactory.Build(config);
                 using var scope = provider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var cashService = scope.ServiceProvider.GetRequiredService<ICashRegisterService>();
 
-                var balance = await mediator.Send(new GetBalanceQuery());
+                var balance = cashService.Balance;
                 CliOutputWriter.Write(format,
                     new { balance },
                     $"Balance: {CliParsing.FormatMoney(balance)}");
@@ -68,10 +67,10 @@ internal static class CashCommands
                 var config = CliConfigurationLoader.Load(configFile);
                 using var provider = CliServiceProviderFactory.Build(config);
                 using var scope = provider.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+                var cashService = scope.ServiceProvider.GetRequiredService<ICashRegisterService>();
 
-                var refunded = await mediator.Send(new RefundAllCommand());
-                var balance = await mediator.Send(new GetBalanceQuery());
+                var refunded = await cashService.RefundAll();
+                var balance = cashService.Balance;
 
                 CliOutputWriter.Write(format,
                     new { refundedAmount = refunded, balance },

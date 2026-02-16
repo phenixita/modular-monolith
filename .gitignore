@@ -6,3 +6,4 @@
 *.log
 *.vspscc
 *.vssscc
+node_modules/
