@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed class DeleteProductHandler(IInventoryRepository repository)
+internal sealed class DeleteProductHandler(IInventoryRepository repository)
     : IRequestHandler<DeleteProductCommand, Unit>
 {
     public async Task<Unit> Handle(DeleteProductCommand request, CancellationToken cancellationToken)

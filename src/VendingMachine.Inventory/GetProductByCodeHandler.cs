@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed class GetProductByCodeHandler(IInventoryRepository repository)
+internal sealed class GetProductByCodeHandler(IInventoryRepository repository)
     : IRequestHandler<GetProductByCodeQuery, Product>
 {
     public Task<Product> Handle(GetProductByCodeQuery request, CancellationToken cancellationToken) =>

@@ -2,4 +2,4 @@ using MediatR;
 
 namespace VendingMachine.Cash;
 
-public sealed record InsertCashCommand(decimal Amount) : IRequest;
+internal sealed record InsertCashCommand(decimal Amount) : IRequest;

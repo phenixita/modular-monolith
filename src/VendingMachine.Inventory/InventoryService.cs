@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed class InventoryService : IInventoryService
+internal sealed class InventoryService : IInventoryService
 {
     private readonly IMediator _mediator;
 

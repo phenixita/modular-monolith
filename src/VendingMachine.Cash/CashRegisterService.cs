@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Cash;
 
-public sealed class CashRegisterService : ICashRegisterService
+internal sealed class CashRegisterService : ICashRegisterService
 {
     private readonly IMediator _mediator;
 

@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Cash;
 
-public sealed class ChargeCashHandler(ICashStorage storage) : IRequestHandler<ChargeCashCommand, Unit>
+internal sealed class ChargeCashHandler(ICashStorage storage) : IRequestHandler<ChargeCashCommand, Unit>
 {
     public Task<Unit> Handle(ChargeCashCommand request, CancellationToken cancellationToken)
     {

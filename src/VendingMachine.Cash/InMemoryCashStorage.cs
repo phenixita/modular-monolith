@@ -1,6 +1,6 @@
 namespace VendingMachine.Cash;
 
-public sealed class InMemoryCashStorage : ICashStorage
+internal sealed class InMemoryCashStorage : ICashStorage
 {
     private decimal _balance;
 

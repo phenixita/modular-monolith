@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed class UpdateProductHandler(IInventoryRepository repository)
+internal sealed class UpdateProductHandler(IInventoryRepository repository)
     : IRequestHandler<UpdateProductCommand, Unit>
 {
     public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)

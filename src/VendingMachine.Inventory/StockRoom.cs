@@ -1,6 +1,6 @@
 namespace VendingMachine.Inventory;
 
-public sealed class StockRoom
+internal sealed class StockRoom
 {
     private readonly Dictionary<string, int> _stock = new(StringComparer.OrdinalIgnoreCase);
 

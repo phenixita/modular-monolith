@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Cash;
 
-public sealed class RefundAllHandler(ICashStorage storage)
+internal sealed class RefundAllHandler(ICashStorage storage)
     : IRequestHandler<RefundAllCommand, decimal>
 {
     public Task<decimal> Handle(RefundAllCommand request, CancellationToken cancellationToken)

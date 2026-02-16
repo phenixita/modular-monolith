@@ -2,7 +2,7 @@ using Npgsql;
 
 namespace VendingMachine.Cash;
 
-public sealed class PostgresCashStorage : ICashStorage
+internal sealed class PostgresCashStorage : ICashStorage
 {
     private readonly string _connectionString;
 

@@ -1,6 +1,6 @@
 namespace VendingMachine.Inventory;
 
-public sealed class InMemoryInventoryRepository : IInventoryRepository
+internal sealed class InMemoryInventoryRepository : IInventoryRepository
 {
     private readonly Dictionary<string, InventoryItem> _items = new(StringComparer.OrdinalIgnoreCase);
 

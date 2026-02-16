@@ -2,4 +2,4 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed record UpdateProductCommand(Product Product) : IRequest<Unit>;
+internal sealed record UpdateProductCommand(Product Product) : IRequest<Unit>;

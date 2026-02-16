@@ -3,7 +3,7 @@ using MongoDB.Driver;
 
 namespace VendingMachine.Inventory;
 
-public sealed class MongoInventoryRepository : IInventoryRepository
+internal sealed class MongoInventoryRepository : IInventoryRepository
 {
     private readonly IMongoCollection<InventoryItemDocument> _items;
 

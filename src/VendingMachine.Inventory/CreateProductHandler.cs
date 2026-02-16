@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed class CreateProductHandler(IInventoryRepository repository)
+internal sealed class CreateProductHandler(IInventoryRepository repository)
     : IRequestHandler<CreateProductCommand, Unit>
 {
     public async Task<Unit> Handle(CreateProductCommand request, CancellationToken cancellationToken)

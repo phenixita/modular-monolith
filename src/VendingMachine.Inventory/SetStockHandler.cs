@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed class SetStockHandler(IInventoryRepository repository)
+internal sealed class SetStockHandler(IInventoryRepository repository)
     : IRequestHandler<SetStockCommand, Unit>
 {
     public async Task<Unit> Handle(SetStockCommand request, CancellationToken cancellationToken)

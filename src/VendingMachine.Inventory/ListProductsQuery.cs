@@ -2,4 +2,4 @@ using MediatR;
 
 namespace VendingMachine.Inventory;
 
-public sealed record ListProductsQuery() : IRequest<IReadOnlyCollection<Product>>;
+internal sealed record ListProductsQuery() : IRequest<IReadOnlyCollection<Product>>;
