@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VendingMachine.Cash\VendingMachine.Cash.csproj" />
+    <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" />
+    <ProjectReference Include="..\VendingMachine.Orders\VendingMachine.Orders.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
+  </ItemGroup>
+</Project>

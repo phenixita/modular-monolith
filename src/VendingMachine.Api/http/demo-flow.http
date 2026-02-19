@@ -1,0 +1,41 @@
+@baseUrl = http://localhost:5000
+@productCode = COLA
+
+### 1) Create product (inventory product create)
+POST {{baseUrl}}/api/inventory/products
+Content-Type: application/json
+
+{
+  "code": "{{productCode}}",
+  "price": 2.00
+}
+
+### 2) Load stock (inventory stock load)
+POST {{baseUrl}}/api/inventory/products/{{productCode}}/stock/load
+Content-Type: application/json
+
+{
+  "quantity": 5
+}
+
+### 3) Insert cash (cash insert)
+POST {{baseUrl}}/api/cash/insert
+Content-Type: application/json
+
+{
+  "amount": 5.00
+}
+
+### 4) Get balance (cash balance)
+GET {{baseUrl}}/api/cash/balance
+
+### 5) Place order (order)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "code": "{{productCode}}"
+}
+
+### 6) Refund all (cash refund)
+POST {{baseUrl}}/api/cash/refund

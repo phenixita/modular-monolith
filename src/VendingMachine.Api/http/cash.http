@@ -1,0 +1,23 @@
+@baseUrl = http://localhost:5000
+
+### Get current balance
+GET {{baseUrl}}/api/cash/balance
+
+### Insert cash
+POST {{baseUrl}}/api/cash/insert
+Content-Type: application/json
+
+{
+  "amount": 2.00
+}
+
+### Refund all
+POST {{baseUrl}}/api/cash/refund
+
+### Validation error: amount must be positive
+POST {{baseUrl}}/api/cash/insert
+Content-Type: application/json
+
+{
+  "amount": 0
+}

@@ -1,0 +1,35 @@
+@baseUrl = http://localhost:5000
+@productCode = COLA
+
+### Create product
+POST {{baseUrl}}/api/inventory/products
+Content-Type: application/json
+
+{
+  "code": "{{productCode}}",
+  "price": 2.00
+}
+
+### Load stock
+POST {{baseUrl}}/api/inventory/products/{{productCode}}/stock/load
+Content-Type: application/json
+
+{
+  "quantity": 5
+}
+
+### Error: load stock for unknown product
+POST {{baseUrl}}/api/inventory/products/WATER/stock/load
+Content-Type: application/json
+
+{
+  "quantity": 1
+}
+
+### Validation error: quantity must be positive
+POST {{baseUrl}}/api/inventory/products/{{productCode}}/stock/load
+Content-Type: application/json
+
+{
+  "quantity": 0
+}

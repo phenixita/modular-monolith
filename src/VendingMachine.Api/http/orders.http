@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:5000
+@productCode = COLA
+
+### Place order
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "code": "{{productCode}}"
+}
+
+### Error: unknown product
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "code": "UNKNOWN"
+}
+
+### Validation error: missing code
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "code": ""
+}
