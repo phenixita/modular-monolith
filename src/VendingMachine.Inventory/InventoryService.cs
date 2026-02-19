@@ -1,43 +1,85 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace VendingMachine.Inventory;
 
 internal sealed class InventoryService : IInventoryService
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<InventoryService> _logger;
 
-    public InventoryService(IMediator mediator)
+    public InventoryService(IMediator mediator, ILogger<InventoryService> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task CreateProduct(Product product) =>
-        await _mediator.Send(new CreateProductCommand(product));
+    public Task CreateProduct(Product product) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.CreateProduct",
+            () => _mediator.Send(new CreateProductCommand(product)),
+            parameters: new { Product = product });
 
-    public async Task UpdateProduct(Product product) =>
-        await _mediator.Send(new UpdateProductCommand(product));
+    public Task UpdateProduct(Product product) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.UpdateProduct",
+            () => _mediator.Send(new UpdateProductCommand(product)),
+            parameters: new { Product = product });
 
-    public async Task DeleteProduct(string code) =>
-        await _mediator.Send(new DeleteProductCommand(code));
+    public Task DeleteProduct(string code) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.DeleteProduct",
+            () => _mediator.Send(new DeleteProductCommand(code)),
+            parameters: new { Code = code });
 
-    public async Task UpsertProduct(Product product) =>
-        await _mediator.Send(new UpsertProductCommand(product));
+    public Task UpsertProduct(Product product) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.UpsertProduct",
+            () => _mediator.Send(new UpsertProductCommand(product)),
+            parameters: new { Product = product });
 
-    public async Task<Product> GetProductByCode(string code) =>
-        await _mediator.Send(new GetProductByCodeQuery(code));
+    public Task<Product> GetProductByCode(string code) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.GetProductByCode",
+            () => _mediator.Send(new GetProductByCodeQuery(code)),
+            parameters: new { Code = code });
 
-    public async Task<IReadOnlyCollection<Product>> ListProducts() =>
-        await _mediator.Send(new ListProductsQuery());
+    public Task<IReadOnlyCollection<Product>> ListProducts() =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.ListProducts",
+            () => _mediator.Send(new ListProductsQuery()));
 
-    public async Task AddStock(string code, int quantity) =>
-        await _mediator.Send(new AddStockCommand(code, quantity));
+    public Task AddStock(string code, int quantity) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.AddStock",
+            () => _mediator.Send(new AddStockCommand(code, quantity)),
+            parameters: new { Code = code, Quantity = quantity });
 
-    public async Task RemoveStock(string code, int quantity) =>
-        await _mediator.Send(new RemoveStockCommand(code, quantity));
+    public Task RemoveStock(string code, int quantity) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.RemoveStock",
+            () => _mediator.Send(new RemoveStockCommand(code, quantity)),
+            parameters: new { Code = code, Quantity = quantity });
 
-    public async Task SetStock(string code, int quantity) =>
-        await _mediator.Send(new SetStockCommand(code, quantity));
+    public Task SetStock(string code, int quantity) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.SetStock",
+            () => _mediator.Send(new SetStockCommand(code, quantity)),
+            parameters: new { Code = code, Quantity = quantity });
 
-    public async Task<int> GetStock(string code) =>
-        await _mediator.Send(new GetStockQuery(code));
+    public Task<int> GetStock(string code) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "InventoryService.GetStock",
+            () => _mediator.Send(new GetStockQuery(code)),
+            parameters: new { Code = code });
 }

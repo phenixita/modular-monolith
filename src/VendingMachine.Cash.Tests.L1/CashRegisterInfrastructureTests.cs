@@ -23,16 +23,16 @@ public sealed class CashRegisterInfrastructureTests
             await register1.Insert(2.00m);
             await register1.Charge(1.25m);
 
-            Assert.Equal(0.75m, register1.Balance);
+            Assert.Equal(0.75m, await register1.GetBalance());
 
             var register2 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString));
-            Assert.Equal(0.75m, register2.Balance);
+            Assert.Equal(0.75m, await register2.GetBalance());
 
             var refunded = await register2.RefundAll();
             Assert.Equal(0.75m, refunded);
 
             var register3 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString));
-            Assert.Equal(0m, register3.Balance);
+            Assert.Equal(0m, await register3.GetBalance());
         }
         finally
         {
@@ -44,6 +44,7 @@ public sealed class CashRegisterInfrastructureTests
     {
         var services = new ServiceCollection();
         services.AddSingleton(storage);
+        services.AddLogging();
         services.AddMediatR(typeof(CashRegisterService).Assembly);
         services.AddSingleton<CashRegisterService>();
         return services.BuildServiceProvider().GetRequiredService<CashRegisterService>();

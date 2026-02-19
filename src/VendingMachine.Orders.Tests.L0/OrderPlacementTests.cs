@@ -86,6 +86,7 @@ public sealed class OrderPlacementTests
         var services = new ServiceCollection();
         services.AddSingleton(storage);
         services.AddSingleton(repository);
+        services.AddLogging();
         services.AddMediatR(
             typeof(OrderService).Assembly,
             typeof(CashRegisterService).Assembly,

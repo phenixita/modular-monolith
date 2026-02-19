@@ -28,7 +28,7 @@ internal static class CashCommands
                 var cashService = scope.ServiceProvider.GetRequiredService<ICashRegisterService>();
 
                 await cashService.Insert(amount);
-                var balance = cashService.Balance;
+                var balance = await cashService.GetBalance();
 
                 CliOutputWriter.Write(format,
                     new { balance },
@@ -49,7 +49,7 @@ internal static class CashCommands
                 using var scope = provider.CreateScope();
                 var cashService = scope.ServiceProvider.GetRequiredService<ICashRegisterService>();
 
-                var balance = cashService.Balance;
+                var balance = await cashService.GetBalance();
                 CliOutputWriter.Write(format,
                     new { balance },
                     $"Balance: {CliParsing.FormatMoney(balance)}");
@@ -70,7 +70,7 @@ internal static class CashCommands
                 var cashService = scope.ServiceProvider.GetRequiredService<ICashRegisterService>();
 
                 var refunded = await cashService.RefundAll();
-                var balance = cashService.Balance;
+                var balance = await cashService.GetBalance();
 
                 CliOutputWriter.Write(format,
                     new { refundedAmount = refunded, balance },

@@ -2,7 +2,7 @@
 {
     public interface ICashRegisterService
     {
-        decimal Balance { get; }
+        Task<decimal> GetBalance();
 
         Task Charge(decimal amount);
 

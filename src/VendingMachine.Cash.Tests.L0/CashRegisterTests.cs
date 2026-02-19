@@ -20,7 +20,7 @@ public sealed class CashRegisterTests
 
         await register.Insert(amount);
 
-        Assert.Equal(expectedBalance, register.Balance);
+        Assert.Equal(expectedBalance, await register.GetBalance());
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public sealed class CashRegisterTests
 
         await register.Insert(2.50m);
 
-        Assert.Equal(2.50m, register.Balance);
+        Assert.Equal(2.50m, await register.GetBalance());
     }
 
     [Fact]
@@ -42,13 +42,14 @@ public sealed class CashRegisterTests
 
         await register.Charge(1.25m);
 
-        Assert.Equal(3.75m, register.Balance);
+        Assert.Equal(3.75m, await register.GetBalance());
     }
 
     private static CashRegisterService BuildRegister(ICashStorage storage)
     {
         var services = new ServiceCollection();
         services.AddSingleton(storage);
+        services.AddLogging();
         services.AddMediatR(typeof(CashRegisterService).Assembly);
         services.AddSingleton<CashRegisterService>();
         return services.BuildServiceProvider().GetRequiredService<CashRegisterService>();

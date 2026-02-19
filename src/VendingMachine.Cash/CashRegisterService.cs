@@ -1,24 +1,42 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace VendingMachine.Cash;
 
 internal sealed class CashRegisterService : ICashRegisterService
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<CashRegisterService> _logger;
 
-    public CashRegisterService(IMediator mediator)
+    public CashRegisterService(IMediator mediator, ILogger<CashRegisterService> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public decimal Balance => _mediator.Send(new GetBalanceQuery()).GetAwaiter().GetResult();
+    public Task<decimal> GetBalance() =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "CashRegisterService.GetBalance",
+            () => _mediator.Send(new GetBalanceQuery()));
 
-    public async Task Insert(decimal amount) =>
-        await _mediator.Send(new InsertCashCommand(amount));
+    public Task Insert(decimal amount) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "CashRegisterService.Insert",
+            () => _mediator.Send(new InsertCashCommand(amount)),
+            parameters: new { Amount = amount });
 
-    public async Task Charge(decimal amount) =>
-        await _mediator.Send(new ChargeCashCommand(amount));
+    public Task Charge(decimal amount) =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "CashRegisterService.Charge",
+            () => _mediator.Send(new ChargeCashCommand(amount)),
+            parameters: new { Amount = amount });
 
-    public async Task<decimal> RefundAll() =>
-        await _mediator.Send(new RefundAllCommand());
+    public Task<decimal> RefundAll() =>
+        LoggingHelper.ExecuteWithLoggingAsync(
+            _logger,
+            "CashRegisterService.RefundAll",
+            () => _mediator.Send(new RefundAllCommand()));
 }

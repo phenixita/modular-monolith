@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Orders;
@@ -14,6 +15,12 @@ internal static class CliServiceProviderFactory
             typeof(InventoryService).Assembly,
             typeof(CashRegisterService).Assembly,
             typeof(OrderService).Assembly);
+
+        services.AddLogging(builder =>
+        {
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Trace);
+        });
 
         services.AddSingleton<IInventoryRepository>(
             new MongoInventoryRepository(config.Mongo.ConnectionString, config.Mongo.Database));
