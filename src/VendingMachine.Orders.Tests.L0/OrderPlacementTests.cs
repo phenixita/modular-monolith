@@ -2,7 +2,9 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
+using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
+using VendingMachine.Orders.PlaceOrder;
 using Xunit;
 
 namespace VendingMachine.Orders.Tests.L0;
@@ -15,6 +17,7 @@ public sealed class OrderPlacementTests
     {
         var storage = new InMemoryCashStorage();
         storage.SetBalance(5.00m);
+
         var repository = new InMemoryInventoryRepository();
         await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
         await repository.SetStockAsync("COLA", 2);
@@ -114,6 +117,8 @@ public sealed class OrderPlacementTests
             typeof(CashRegisterService).Assembly,
             typeof(InventoryService).Assembly);
         services.AddSingleton<IOrderService, OrderService>();
+        services.AddSingleton<IInventoryService, InventoryService>();
+        services.AddSingleton<ICashRegisterService, CashRegisterService>();
         return services.BuildServiceProvider();
     }
 

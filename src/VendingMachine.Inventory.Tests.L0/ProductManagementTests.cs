@@ -1,4 +1,7 @@
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Inventory;
+using VendingMachine.Inventory.Infrastructure;
 using Xunit;
 
 namespace VendingMachine.Inventory.Tests.L0;
@@ -11,11 +14,11 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new CreateProductHandler(repository);
+        var service = BuildInventoryService(repository);
         var product = new Product("COLA", "Coca Cola", 1.50m);
 
         // Act
-        await handler.Handle(new CreateProductCommand(product), CancellationToken.None);
+        await service.CreateProduct(product);
 
         // Assert
         var stored = await repository.GetByCodeAsync("COLA");
@@ -27,12 +30,12 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new CreateProductHandler(repository);
+        var service = BuildInventoryService(repository);
         var product = new Product("COLA", "Coca Cola", -1.00m);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
-            async () => await handler.Handle(new CreateProductCommand(product), CancellationToken.None)
+            async () => await service.CreateProduct(product)
         );
     }
 
@@ -41,11 +44,11 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("WATER", "Water", 1.00m));
-        var handler = new UpdateProductHandler(repository);
+        var service = BuildInventoryService(repository);
+        await service.CreateProduct(new Product("WATER", "Water", 1.00m));
 
         // Act
-        await handler.Handle(new UpdateProductCommand(new Product("WATER", "Water", 1.25m)), CancellationToken.None);
+        await service.UpdateProduct(new Product("WATER", "Water", 1.25m));
 
         // Assert
         var updated = await repository.GetByCodeAsync("WATER");
@@ -57,13 +60,12 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("JUICE", "Orange Juice", 2.00m));
-        var handler = new UpdateProductHandler(repository);
+        var service = BuildInventoryService(repository);
+        await service.CreateProduct(new Product("JUICE", "Orange Juice", 2.00m));
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
-            async () => await handler.Handle(new UpdateProductCommand(new Product("JUICE", "Orange Juice", -0.50m)),
-                CancellationToken.None)
+            async () => await service.UpdateProduct(new Product("JUICE", "Orange Juice", -0.50m))
         );
 
         var stored = await repository.GetByCodeAsync("JUICE");
@@ -75,11 +77,11 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-        var handler = new GetProductByCodeHandler(repository);
+        var service = BuildInventoryService(repository);
+        await service.CreateProduct(new Product("COLA", "Coca Cola", 1.50m));
 
         // Act
-        var product = await handler.Handle(new GetProductByCodeQuery("COLA"), CancellationToken.None);
+        var product = await service.GetProductByCode("COLA");
 
         // Assert
         Assert.Equal("COLA", product.Code);
@@ -91,11 +93,11 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new GetProductByCodeHandler(repository);
+        var service = BuildInventoryService(repository);
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(
-            async () => await handler.Handle(new GetProductByCodeQuery("UNKNOWN"), CancellationToken.None)
+            async () => await service.GetProductByCode("UNKNOWN")
         );
     }
 
@@ -104,12 +106,12 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
+        var service = BuildInventoryService(repository);
+        await service.CreateProduct(new Product("COLA", "Coca Cola", 1.50m));
         await repository.SetStockAsync("COLA", 0);
-        var handler = new DeleteProductHandler(repository);
 
         // Act
-        await handler.Handle(new DeleteProductCommand("COLA"), CancellationToken.None);
+        await service.DeleteProduct("COLA");
 
         // Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -122,16 +124,26 @@ public sealed class ProductManagementTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("WATER", "Water", 1.00m));
+        var service = BuildInventoryService(repository);
+        await service.CreateProduct(new Product("WATER", "Water", 1.00m));
         await repository.SetStockAsync("WATER", 3);
-        var handler = new DeleteProductHandler(repository);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await handler.Handle(new DeleteProductCommand("WATER"), CancellationToken.None)
+            async () => await service.DeleteProduct("WATER")
         );
 
         var stored = await repository.GetByCodeAsync("WATER");
         Assert.Equal("WATER", stored.Code);
+    }
+
+    private static IInventoryService BuildInventoryService(IInventoryRepository repository)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(repository);
+        services.AddLogging();
+        services.AddMediatR(typeof(InventoryService).Assembly);
+        services.AddSingleton<IInventoryService, InventoryService>();
+        return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
     }
 }

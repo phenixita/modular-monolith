@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
+using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
 
 internal static class CliServiceProviderFactory
@@ -11,10 +12,9 @@ internal static class CliServiceProviderFactory
     {
         var services = new ServiceCollection();
 
-        services.AddMediatR(
-            typeof(InventoryService).Assembly,
-            typeof(CashRegisterService).Assembly,
-            typeof(OrderService).Assembly);
+        services.AddVendingMachineInventoryModule();
+        services.AddCashRegisterModule();
+        services.AddOrdersModule(); 
 
         services.AddLogging(builder =>
         {

@@ -1,4 +1,7 @@
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Inventory;
+using VendingMachine.Inventory.Infrastructure;
 using Xunit;
 
 namespace VendingMachine.Inventory.Tests.L0;
@@ -14,15 +17,14 @@ public sealed class UnloadBeveragesTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new RemoveStockHandler(repository);
+        var service = BuildInventoryService(repository);
 
         // Setup initial product and stock
         await repository.AddOrUpdateAsync(new Product(productCode, $"{productCode} Name", 1.50m));
         await repository.SetStockAsync(productCode, initialStock);
 
         // Act
-        var command = new RemoveStockCommand(productCode, quantity);
-        await handler.Handle(command, CancellationToken.None);
+        await service.RemoveStock(productCode, quantity);
 
         // Assert
         var actualStock = await repository.GetQuantityAsync(productCode);
@@ -34,13 +36,13 @@ public sealed class UnloadBeveragesTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new RemoveStockHandler(repository);
+        var service = BuildInventoryService(repository);
         await repository.AddOrUpdateAsync(new Product("COLA", "Cola", 1.50m));
         await repository.SetStockAsync("COLA", 3);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await handler.Handle(new RemoveStockCommand("COLA", 5), CancellationToken.None)
+            async () => await service.RemoveStock("COLA", 5)
         );
     }
 
@@ -49,13 +51,13 @@ public sealed class UnloadBeveragesTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new RemoveStockHandler(repository);
+        var service = BuildInventoryService(repository);
         await repository.AddOrUpdateAsync(new Product("COLA", "Cola", 1.50m));
         await repository.SetStockAsync("COLA", 10);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
-            async () => await handler.Handle(new RemoveStockCommand("COLA", 0), CancellationToken.None)
+            async () => await service.RemoveStock("COLA", 0)
         );
     }
 
@@ -64,13 +66,13 @@ public sealed class UnloadBeveragesTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new RemoveStockHandler(repository);
+        var service = BuildInventoryService(repository);
         await repository.AddOrUpdateAsync(new Product("COLA", "Cola", 1.50m));
         await repository.SetStockAsync("COLA", 10);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
-            async () => await handler.Handle(new RemoveStockCommand("COLA", -5), CancellationToken.None)
+            async () => await service.RemoveStock("COLA", -5)
         );
     }
 
@@ -79,11 +81,21 @@ public sealed class UnloadBeveragesTests
     {
         // Arrange
         var repository = new InMemoryInventoryRepository();
-        var handler = new RemoveStockHandler(repository);
+        var service = BuildInventoryService(repository);
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(
-            async () => await handler.Handle(new RemoveStockCommand("UNKNOWN", 5), CancellationToken.None)
+            async () => await service.RemoveStock("UNKNOWN", 5)
         );
+    }
+
+    private static IInventoryService BuildInventoryService(IInventoryRepository repository)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(repository);
+        services.AddLogging();
+        services.AddMediatR(typeof(InventoryService).Assembly);
+        services.AddSingleton<IInventoryService, InventoryService>();
+        return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
     }
 }

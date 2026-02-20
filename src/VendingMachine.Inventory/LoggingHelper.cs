@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace VendingMachine.Inventory;
+namespace VendingMachine.Inventory._Infrastructure;
 
 /// <summary>
 /// Internal helper to encapsulate logging pattern across service operations.

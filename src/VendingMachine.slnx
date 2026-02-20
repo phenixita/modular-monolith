@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Cash/">
+    <Project Path="VendingMachine.Cache.Infrastructure/VendingMachine.Cash.Infrastructure.csproj" Id="efffa0d8-1479-4420-affe-eb07f811f145" />
     <Project Path="VendingMachine.Cash.Abstractions/VendingMachine.Cash.Abstractions.csproj" />
     <Project Path="VendingMachine.Cash.Tests.L0/VendingMachine.Cash.Tests.L0.csproj" />
     <Project Path="VendingMachine.Cash.Tests.L1/VendingMachine.Cash.Tests.L1.csproj" />
@@ -7,15 +8,16 @@
   </Folder>
   <Folder Name="/Inventory/">
     <Project Path="VendingMachine.Inventory.Abstractions/VendingMachine.Inventory.Abstractions.csproj" />
+    <Project Path="VendingMachine.Inventory.Infrastructure/VendingMachine.Inventory.Infrastructure.csproj" Id="c2e61083-031d-4b30-bc1e-cc97aa2a0377" />
     <Project Path="VendingMachine.Inventory.Tests.L0/VendingMachine.Inventory.Tests.L0.csproj" />
     <Project Path="VendingMachine.Inventory.Tests.L1/VendingMachine.Inventory.Tests.L1.csproj" />
     <Project Path="VendingMachine.Inventory/VendingMachine.Inventory.csproj" />
   </Folder>
   <Folder Name="/Orders/">
-    <Project Path="VendingMachine.Orders/VendingMachine.Orders.csproj" />
+    <Project Path="VendingMachine.Orders.Abstractions/VendingMachine.Orders.Abstractions.csproj" />
     <Project Path="VendingMachine.Orders.Tests.L0/VendingMachine.Orders.Tests.L0.csproj" />
     <Project Path="VendingMachine.Orders.Tests.L1/VendingMachine.Orders.Tests.L1.csproj" />
-    <Project Path="VendingMachine.Orders.Abstractions/VendingMachine.Orders.Abstractions.csproj" />
+    <Project Path="VendingMachine.Orders/VendingMachine.Orders.csproj" />
   </Folder>
   <Folder Name="/Api/">
     <Project Path="VendingMachine.Api/VendingMachine.Api.csproj" />

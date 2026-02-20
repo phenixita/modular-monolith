@@ -1,4 +1,7 @@
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Inventory;
+using VendingMachine.Inventory.Infrastructure;
 using Xunit;
 
 namespace VendingMachine.Inventory.Tests.L1;
@@ -15,13 +18,14 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var service1 = BuildInventoryService(repository1);
 
             // Create a product first
             var product = new Product("COLA", "Coca Cola", 1.50m);
-            await repository1.AddOrUpdateAsync(product);
+            await service1.CreateProduct(product);
 
             // Act - Add stock using first repository instance
-            await repository1.AddStockAsync("COLA", 5);
+            await service1.AddStock("COLA", 5);
 
             // Assert - Verify persistence by reading from a new repository instance
             var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -29,7 +33,8 @@ public sealed class InventoryInfrastructureTests
             Assert.Equal(5, quantity);
 
             // Act - Add more stock
-            await repository2.AddStockAsync("COLA", 3);
+            var service2 = BuildInventoryService(repository2);
+            await service2.AddStock("COLA", 3);
 
             // Assert - Verify the total is correct
             var repository3 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -51,14 +56,15 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var service1 = BuildInventoryService(repository1);
 
             // Create a product and set initial stock
             var product = new Product("WATER", "Water", 1.00m);
-            await repository1.AddOrUpdateAsync(product);
-            await repository1.SetStockAsync("WATER", 20);
+            await service1.CreateProduct(product);
+            await service1.SetStock("WATER", 20);
 
             // Act - Remove stock using first repository instance
-            await repository1.RemoveStockAsync("WATER", 15);
+            await service1.RemoveStock("WATER", 15);
 
             // Assert - Verify persistence by reading from a new repository instance
             var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -66,7 +72,8 @@ public sealed class InventoryInfrastructureTests
             Assert.Equal(5, quantity);
 
             // Act - Remove more stock
-            await repository2.RemoveStockAsync("WATER", 5);
+            var service2 = BuildInventoryService(repository2);
+            await service2.RemoveStock("WATER", 5);
 
             // Assert - Verify the final quantity is zero
             var repository3 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -88,16 +95,17 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var service = BuildInventoryService(repository);
 
             // Create multiple products
-            await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-            await repository.AddOrUpdateAsync(new Product("WATER", "Water", 1.00m));
-            await repository.AddOrUpdateAsync(new Product("JUICE", "Orange Juice", 2.00m));
+            await service.CreateProduct(new Product("COLA", "Coca Cola", 1.50m));
+            await service.CreateProduct(new Product("WATER", "Water", 1.00m));
+            await service.CreateProduct(new Product("JUICE", "Orange Juice", 2.00m));
 
             // Act - Add stock to each product
-            await repository.AddStockAsync("COLA", 10);
-            await repository.AddStockAsync("WATER", 15);
-            await repository.AddStockAsync("JUICE", 8);
+            await service.AddStock("COLA", 10);
+            await service.AddStock("WATER", 15);
+            await service.AddStock("JUICE", 8);
 
             // Assert - Verify each product has correct stock
             var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -120,13 +128,14 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var service = BuildInventoryService(repository);
 
-            await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-            await repository.SetStockAsync("COLA", 3);
+            await service.CreateProduct(new Product("COLA", "Coca Cola", 1.50m));
+            await service.SetStock("COLA", 3);
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await repository.RemoveStockAsync("COLA", 5)
+                async () => await service.RemoveStock("COLA", 5)
             );
         }
         finally
@@ -144,10 +153,11 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var service = BuildInventoryService(repository);
 
             // Act & Assert - Try to add stock to a product that doesn't exist
             await Assert.ThrowsAsync<KeyNotFoundException>(
-                async () => await repository.AddStockAsync("UNKNOWN", 5)
+                async () => await service.AddStock("UNKNOWN", 5)
             );
         }
         finally
@@ -165,9 +175,10 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var service = BuildInventoryService(repository);
 
             await Assert.ThrowsAsync<KeyNotFoundException>(
-                async () => await repository.RemoveStockAsync("UNKNOWN", 5)
+                async () => await service.RemoveStock("UNKNOWN", 5)
             );
         }
         finally
@@ -185,11 +196,11 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
-            var handler = new CreateProductHandler(repository1);
+            var service = BuildInventoryService(repository1);
             var product = new Product("COLA", "Coca Cola", 1.50m);
 
             // Act
-            await handler.Handle(new CreateProductCommand(product), CancellationToken.None);
+            await service.CreateProduct(product);
 
             // Assert
             var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -211,11 +222,11 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
-            await repository1.AddOrUpdateAsync(new Product("WATER", "Water", 1.00m));
-            var handler = new UpdateProductHandler(repository1);
+            var service = BuildInventoryService(repository1);
+            await service.CreateProduct(new Product("WATER", "Water", 1.00m));
 
             // Act
-            await handler.Handle(new UpdateProductCommand(new Product("WATER", "Water", 1.25m)), CancellationToken.None);
+            await service.UpdateProduct(new Product("WATER", "Water", 1.25m));
 
             // Assert
             var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -237,12 +248,12 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
-            await repository1.AddOrUpdateAsync(new Product("JUICE", "Orange Juice", 2.00m));
-            await repository1.SetStockAsync("JUICE", 0);
-            var handler = new DeleteProductHandler(repository1);
+            var service = BuildInventoryService(repository1);
+            await service.CreateProduct(new Product("JUICE", "Orange Juice", 2.00m));
+            await service.SetStock("JUICE", 0);
 
             // Act
-            await handler.Handle(new DeleteProductCommand("JUICE"), CancellationToken.None);
+            await service.DeleteProduct("JUICE");
 
             // Assert
             var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
@@ -265,18 +276,28 @@ public sealed class InventoryInfrastructureTests
         try
         {
             var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
-            await repository.AddOrUpdateAsync(new Product("TEA", "Tea", 0.80m));
-            await repository.SetStockAsync("TEA", 2);
-            var handler = new DeleteProductHandler(repository);
+            var service = BuildInventoryService(repository);
+            await service.CreateProduct(new Product("TEA", "Tea", 0.80m));
+            await service.SetStock("TEA", 2);
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await handler.Handle(new DeleteProductCommand("TEA"), CancellationToken.None)
+                async () => await service.DeleteProduct("TEA")
             );
         }
         finally
         {
             await fixture.DisposeAsync();
         }
+    }
+
+    private static IInventoryService BuildInventoryService(IInventoryRepository repository)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(repository);
+        services.AddLogging();
+        services.AddMediatR(typeof(InventoryService).Assembly);
+        services.AddSingleton<IInventoryService, InventoryService>();
+        return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
     }
 }

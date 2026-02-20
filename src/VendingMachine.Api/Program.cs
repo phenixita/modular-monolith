@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
+using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,10 +12,9 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
-builder.Services.AddMediatR(
-    typeof(InventoryService).Assembly,
-    typeof(CashRegisterService).Assembly,
-    typeof(OrderService).Assembly);
+builder.Services.AddVendingMachineInventoryModule();
+builder.Services.AddCashRegisterModule();
+builder.Services.AddOrdersModule();
 
 var infrastructureOptions = InfrastructureOptions.Load(builder.Configuration);
 

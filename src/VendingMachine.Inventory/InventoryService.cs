@@ -1,9 +1,20 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VendingMachine.Inventory._Infrastructure;
+using VendingMachine.Inventory.CreateProduct;
+using VendingMachine.Inventory.DeleteProduct;
+using VendingMachine.Inventory.GetProduct; 
+using VendingMachine.Inventory.ListProducts;
+using VendingMachine.Inventory.RemoveStock;
+using VendingMachine.Inventory.Stock.Add;
+using VendingMachine.Inventory.Stock.Get;
+using VendingMachine.Inventory.Stock.Set;
+using VendingMachine.Inventory.UpdateProduct;
+using VendingMachine.Inventory.UpsertProduct;
 
 namespace VendingMachine.Inventory;
 
-internal sealed class InventoryService : IInventoryService
+public sealed class InventoryService : IInventoryService
 {
     private readonly IMediator _mediator;
     private readonly ILogger<InventoryService> _logger;

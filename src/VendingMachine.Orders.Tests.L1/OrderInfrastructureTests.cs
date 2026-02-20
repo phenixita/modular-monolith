@@ -2,7 +2,9 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
+using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
+using VendingMachine.Orders.PlaceOrder;
 using Xunit;
 
 namespace VendingMachine.Orders.Tests.L1;

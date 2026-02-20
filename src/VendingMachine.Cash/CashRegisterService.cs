@@ -1,9 +1,13 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VendingMachine.Cash.Charge;
+using VendingMachine.Cash.GetBalance;
+using VendingMachine.Cash.InsertCache;
+using VendingMachine.Cash.RefundAll;
 
 namespace VendingMachine.Cash;
 
-internal sealed class CashRegisterService : ICashRegisterService
+public sealed class CashRegisterService : ICashRegisterService
 {
     private readonly IMediator _mediator;
     private readonly ILogger<CashRegisterService> _logger;

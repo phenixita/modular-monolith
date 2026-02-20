@@ -9,7 +9,4 @@
     <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" />
     <ProjectReference Include="..\VendingMachine.Orders\VendingMachine.Orders.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
-  </ItemGroup>
 </Project>

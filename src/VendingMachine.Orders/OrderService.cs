@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using VendingMachine.Orders.PlaceOrder;
 
 namespace VendingMachine.Orders;
 
