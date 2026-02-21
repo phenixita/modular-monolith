@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "modular-monolith",
+  "classifications": ["dotnet", "modular-monolith", "module"],
+  "identity": "ModularMonolith.Module.Template.CSharp",
+  "name": "Modular Monolith Module",
+  "shortName": "mm-module",
+  "sourceName": "__MODULE_NAME__",
+  "defaultName": "Payments",
+  "preferNameDirectory": false,
+  "symbols": {
+    "RootNamespace": {
+      "type": "parameter",
+      "datatype": "text",
+      "defaultValue": "VendingMachine",
+      "description": "Root namespace for generated projects"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!RootNamespace)",
+          "exclude": ["**/*"]
+        }
+      ],
+      "rename": {
+        "__ROOT_NAMESPACE__": "{{RootNamespace}}"
+      }
+    }
+  ],
+  "primaryOutputs": [
+    {
+      "path": "src/{{RootNamespace}}.__MODULE_NAME__/{{RootNamespace}}.__MODULE_NAME__.csproj"
+    },
+    {
+      "path": "src/{{RootNamespace}}.__MODULE_NAME__.Abstractions/{{RootNamespace}}.__MODULE_NAME__.Abstractions.csproj"
+    },
+    {
+      "path": "src/{{RootNamespace}}.__MODULE_NAME__.Infrastructure/{{RootNamespace}}.__MODULE_NAME__.Infrastructure.csproj"
+    }
+  ]
+}
