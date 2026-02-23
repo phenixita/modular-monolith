@@ -1,10 +1,10 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using VendingMachine.Persistence.Abstractions;
 using VendingMachine.Cash.Charge;
 using VendingMachine.Cash.GetBalance;
 using VendingMachine.Cash.InsertCache;
 using VendingMachine.Cash.RefundAll;
+using VendingMachine.Persistence;
 
 namespace VendingMachine.Cash;
 

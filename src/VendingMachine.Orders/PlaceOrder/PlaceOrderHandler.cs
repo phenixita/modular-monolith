@@ -2,7 +2,7 @@ using System.Globalization;
 using MediatR;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
-using VendingMachine.Persistence.Abstractions;
+using VendingMachine.Persistence;
 
 namespace VendingMachine.Orders.PlaceOrder;
 

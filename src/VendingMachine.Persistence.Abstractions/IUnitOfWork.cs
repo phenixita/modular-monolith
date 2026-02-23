@@ -1,4 +1,4 @@
-namespace VendingMachine.Persistence.Abstractions;
+namespace VendingMachine.Persistence;
 
 public interface IUnitOfWork
 {

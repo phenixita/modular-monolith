@@ -6,9 +6,9 @@ namespace VendingMachine.Orders
     public static class DI
     {
         public static IServiceCollection AddOrdersModule(this IServiceCollection services)
-        {
-            return services.AddMediatR(typeof(OrderService).Assembly);
-        }
+        => services.AddScoped<IOrderService, OrderService>()
+        .AddMediatR(typeof(OrderService).Assembly);
+
 
     }
 }

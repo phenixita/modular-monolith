@@ -1,6 +1,6 @@
 using System.Data.Common;
 
-namespace VendingMachine.Persistence.Abstractions;
+namespace VendingMachine.Persistence;
 
 public interface IDbConnectionFactory<TConnection>
     where TConnection : DbConnection

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
-using VendingMachine.Persistence.Abstractions;
+using Npgsql; 
 
 namespace VendingMachine.Persistence;
 

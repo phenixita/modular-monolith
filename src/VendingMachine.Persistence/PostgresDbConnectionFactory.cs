@@ -1,5 +1,4 @@
 using Npgsql;
-using VendingMachine.Persistence.Abstractions;
 
 namespace VendingMachine.Persistence;
 

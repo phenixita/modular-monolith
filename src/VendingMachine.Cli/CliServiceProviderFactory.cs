@@ -12,7 +12,7 @@ internal static class CliServiceProviderFactory
     {
         var services = new ServiceCollection();
 
-        services.AddVendingMachineInventoryModule();
+        services.AddInventoryModule();
         services.AddCashRegisterModule();
         services.AddOrdersModule();
         services.AddPostgresPersistence(config.Postgres.ConnectionString);

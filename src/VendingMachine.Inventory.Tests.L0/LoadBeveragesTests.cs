@@ -78,7 +78,7 @@ public sealed class LoadBeveragesTests
         var services = new ServiceCollection();
         services.AddSingleton(repository);
         services.AddLogging();
-        services.AddVendingMachineInventoryModule();
+        services.AddInventoryModule();
         services.AddSingleton<IInventoryService, InventoryService>();
         return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
     }

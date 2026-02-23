@@ -1,5 +1,6 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
+using Npgsql;
 using Xunit;
 
 namespace VendingMachine.Cash.Tests.L1;
@@ -24,11 +25,32 @@ public sealed class InfrastructureFixture : IAsyncLifetime
     {
         await _postgresContainer.StartAsync();
         ConnectionString =
-            $"Host={_postgresContainer.Hostname};Port={_postgresContainer.GetMappedPublicPort(PostgresPort)};Username=postgres;Password=postgres;Database=vendingmachine_cash;SSL Mode=Disable;Trust Server Certificate=true";
+            $"Host={_postgresContainer.Hostname};Port={_postgresContainer.GetMappedPublicPort(PostgresPort)};Username=postgres;Password=postgres;Database=vendingmachine_cash;SSL Mode=Disable;Trust Server Certificate=true;Pooling=false";
+        await WaitUntilDatabaseReadyAsync();
     }
 
     public async Task DisposeAsync()
     {
         await _postgresContainer.DisposeAsync();
+    }
+
+    private async Task WaitUntilDatabaseReadyAsync()
+    {
+        var timeoutAt = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < timeoutAt)
+        {
+            try
+            {
+                await using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync();
+                return;
+            }
+            catch (NpgsqlException)
+            {
+                await Task.Delay(250);
+            }
+        }
+
+        throw new TimeoutException("PostgreSQL container did not become ready in time.");
     }
 }
