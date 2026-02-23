@@ -29,6 +29,27 @@ public sealed class InfrastructureFixture : IAsyncLifetime
         await WaitUntilDatabaseReadyAsync();
     }
 
+    public async Task ResetStateAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            CREATE SCHEMA IF NOT EXISTS cash;
+
+            CREATE TABLE IF NOT EXISTS cash.cash_state (
+                property VARCHAR(50) PRIMARY KEY,
+                value NUMERIC(10,2) NOT NULL
+            );
+
+            TRUNCATE TABLE cash.cash_state;
+            INSERT INTO cash.cash_state (property, value) VALUES ('balance', 0.00);
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task DisposeAsync()
     {
         await _postgresContainer.DisposeAsync();
