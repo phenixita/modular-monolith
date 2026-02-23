@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/Cash/">
-    <Project Path="VendingMachine.Cache.Infrastructure/VendingMachine.Cash.Infrastructure.csproj" Id="efffa0d8-1479-4420-affe-eb07f811f145" />
+    <Project Path="VendingMachine.Cash.Infrastructure/VendingMachine.Cash.Infrastructure.csproj" Id="efffa0d8-1479-4420-affe-eb07f811f145" />
     <Project Path="VendingMachine.Cash.Abstractions/VendingMachine.Cash.Abstractions.csproj" />
     <Project Path="VendingMachine.Cash.Tests.L0/VendingMachine.Cash.Tests.L0.csproj" />
     <Project Path="VendingMachine.Cash.Tests.L1/VendingMachine.Cash.Tests.L1.csproj" />

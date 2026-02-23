@@ -1,9 +1,9 @@
 ---
-description: Use when working on cache storage implementations (ICashStorage), Postgres/InMemory cash storage, or cache persistence for balance.
-applyTo: 'src/VendingMachine.Cache.Infrastructure/**'
+description: Use when working on cash domain implementations (ICashStorage), Postgres/InMemory cash storage, or cash persistence for balance.
+applyTo: 'src/VendingMachine.Cash.Infrastructure/**'
 ---
 
-# VendingMachine.Cache Standards (Hard Rules)
+# VendingMachine.Cash Standards (Hard Rules)
 
 ## Naming and Structure
 - Use PascalCase for public types and methods; file name must match the primary type.
