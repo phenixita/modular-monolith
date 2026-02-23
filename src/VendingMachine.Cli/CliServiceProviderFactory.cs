@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using VendingMachine.Cash;
@@ -14,7 +13,7 @@ internal static class CliServiceProviderFactory
 
         services.AddVendingMachineInventoryModule();
         services.AddCashRegisterModule();
-        services.AddOrdersModule(); 
+        services.AddOrdersModule();
 
         services.AddLogging(builder =>
         {

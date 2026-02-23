@@ -1,6 +1,4 @@
-using MediatR;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Extensions.Logging;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;

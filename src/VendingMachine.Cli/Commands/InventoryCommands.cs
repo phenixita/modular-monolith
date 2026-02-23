@@ -1,7 +1,6 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.Globalization;
-using System.IO;
 using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Inventory;
 

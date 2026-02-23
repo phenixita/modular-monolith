@@ -1,4 +1,4 @@
-﻿namespace VendingMachine.Cash
+namespace VendingMachine.Cash
 {
     public interface ICashRegisterService
     {

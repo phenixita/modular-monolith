@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using VendingMachine.Inventory._Infrastructure;
 using VendingMachine.Inventory.CreateProduct;
 using VendingMachine.Inventory.DeleteProduct;
-using VendingMachine.Inventory.GetProduct; 
+using VendingMachine.Inventory.GetProduct;
 using VendingMachine.Inventory.ListProducts;
 using VendingMachine.Inventory.RemoveStock;
 using VendingMachine.Inventory.Stock.Add;

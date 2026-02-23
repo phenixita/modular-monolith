@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Cash;
 using Xunit;
 
 namespace VendingMachine.Cash.Tests.L0;
@@ -34,14 +33,14 @@ public sealed class CashRegisterTests
     [Fact]
     public async Task Charge_DecreasesBalance()
     {
-        var register = BuildCashRegisterService(5.00m); 
+        var register = BuildCashRegisterService(5.00m);
 
         await register.Charge(1.25m);
 
         Assert.Equal(3.75m, await register.GetBalance());
     }
 
-    
+
 
     private static CashRegisterService BuildCashRegisterService(decimal initialBalance = 0)
     {

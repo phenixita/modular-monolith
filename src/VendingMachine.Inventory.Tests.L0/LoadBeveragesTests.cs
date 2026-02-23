@@ -1,6 +1,4 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using Xunit;
 

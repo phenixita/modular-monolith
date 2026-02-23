@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Cash;
 using Xunit;
 
 namespace VendingMachine.Cash.Tests.L1;

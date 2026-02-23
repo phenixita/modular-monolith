@@ -36,10 +36,10 @@ internal static class LoggingHelper
         try
         {
             var result = await operation();
-            
+
             logger.Log(successLevel, "{Operation} completed in {ElapsedMs}ms with result {@Result}",
                 operationName, sw.ElapsedMilliseconds, result);
-            
+
             return result;
         }
         catch (Exception ex)
@@ -75,7 +75,7 @@ internal static class LoggingHelper
         try
         {
             await operation();
-            
+
             logger.Log(successLevel, "{Operation} completed in {ElapsedMs}ms",
                 operationName, sw.ElapsedMilliseconds);
         }
