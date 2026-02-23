@@ -8,11 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
-    <PackageReference Include="Npgsql" Version="10.0.0" />
+    <PackageReference Include="Npgsql" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\VendingMachine.Inventory.Abstractions\VendingMachine.Inventory.Abstractions.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence\VendingMachine.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>

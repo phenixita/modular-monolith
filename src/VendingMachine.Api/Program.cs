@@ -3,6 +3,7 @@ using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
+using VendingMachine.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +17,17 @@ builder.Services.AddOrdersModule();
 
 var infrastructureOptions = InfrastructureOptions.Load(builder.Configuration);
 
-builder.Services.AddSingleton<IInventoryRepository>(_ =>
-    new PostgresInventoryRepository(infrastructureOptions.Postgres.ConnectionString));
+builder.Services.AddPostgresPersistence(infrastructureOptions.Postgres.ConnectionString);
 
-builder.Services.AddSingleton<ICashStorage>(_ =>
-    new PostgresCashStorage(infrastructureOptions.Postgres.ConnectionString));
+builder.Services.AddSingleton<IInventoryRepository>(sp =>
+    new PostgresInventoryRepository(
+        infrastructureOptions.Postgres.ConnectionString,
+        sp.GetRequiredService<IPostgresTransactionAccessor>()));
+
+builder.Services.AddSingleton<ICashStorage>(sp =>
+    new PostgresCashStorage(
+        infrastructureOptions.Postgres.ConnectionString,
+        sp.GetRequiredService<IPostgresTransactionAccessor>()));
 
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICashRegisterService, CashRegisterService>();
@@ -64,7 +71,7 @@ api.MapPost("/inventory/products", async (
     var code = NormalizeCode(request.Code);
     var product = new Product(code, code, request.Price);
 
-    await inventoryService.CreateProduct(product);
+    await inventoryService.CreateProduct(product, cancellationToken);
 
     var data = new ProductCreatedResponse(product.Code, request.Price);
     return Results.Ok(ApiEnvelope.Success(data));
@@ -78,8 +85,8 @@ api.MapPost("/inventory/products/{code}/stock/load", async (
 {
     var normalizedCode = NormalizeCode(code);
 
-    await inventoryService.AddStock(normalizedCode, request.Quantity);
-    var stock = await inventoryService.GetStock(normalizedCode);
+    await inventoryService.AddStock(normalizedCode, request.Quantity, cancellationToken);
+    var stock = await inventoryService.GetStock(normalizedCode, cancellationToken);
 
     var data = new StockResponse(normalizedCode, stock);
     return Results.Ok(ApiEnvelope.Success(data));
@@ -90,8 +97,8 @@ api.MapPost("/cash/insert", async (
     ICashRegisterService cashService,
     CancellationToken cancellationToken) =>
 {
-    await cashService.Insert(request.Amount);
-    var balance = await cashService.GetBalance();
+    await cashService.Insert(request.Amount, cancellationToken);
+    var balance = await cashService.GetBalance(cancellationToken);
 
     var data = new BalanceResponse(balance);
     return Results.Ok(ApiEnvelope.Success(data));
@@ -101,7 +108,7 @@ api.MapGet("/cash/balance", async (
     ICashRegisterService cashService,
     CancellationToken cancellationToken) =>
 {
-    var balance = await cashService.GetBalance();
+    var balance = await cashService.GetBalance(cancellationToken);
     var data = new BalanceResponse(balance);
 
     return Results.Ok(ApiEnvelope.Success(data));
@@ -111,8 +118,8 @@ api.MapPost("/cash/refund", async (
     ICashRegisterService cashService,
     CancellationToken cancellationToken) =>
 {
-    var refunded = await cashService.RefundAll();
-    var balance = await cashService.GetBalance();
+    var refunded = await cashService.RefundAll(cancellationToken);
+    var balance = await cashService.GetBalance(cancellationToken);
 
     var data = new RefundResponse(refunded, balance);
     return Results.Ok(ApiEnvelope.Success(data));

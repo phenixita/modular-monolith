@@ -16,4 +16,4 @@
 
 - NON NEGOTIABLE: Test driven development.
 - Use red, green, refactor cycle.
-- Usa la skill `code-cleanup` per mantenere il codice pulito e formattato.
+- Usa la skill `code-cleanup` per mantenere il codice pulito e formattato ogni volta che finisci di lavorare e restituisci il controllo all'utente.

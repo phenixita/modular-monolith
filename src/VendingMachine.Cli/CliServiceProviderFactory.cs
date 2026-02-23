@@ -4,6 +4,7 @@ using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
+using VendingMachine.Persistence;
 
 internal static class CliServiceProviderFactory
 {
@@ -14,6 +15,7 @@ internal static class CliServiceProviderFactory
         services.AddVendingMachineInventoryModule();
         services.AddCashRegisterModule();
         services.AddOrdersModule();
+        services.AddPostgresPersistence(config.Postgres.ConnectionString);
 
         services.AddLogging(builder =>
         {
@@ -21,9 +23,14 @@ internal static class CliServiceProviderFactory
             builder.SetMinimumLevel(LogLevel.Trace);
         });
 
-        services.AddSingleton<IInventoryRepository>(
-            new PostgresInventoryRepository(config.Postgres.ConnectionString));
-        services.AddSingleton<ICashStorage>(new PostgresCashStorage(config.Postgres.ConnectionString));
+        services.AddSingleton<IInventoryRepository>(sp =>
+            new PostgresInventoryRepository(
+                config.Postgres.ConnectionString,
+                sp.GetRequiredService<IPostgresTransactionAccessor>()));
+        services.AddSingleton<ICashStorage>(sp =>
+            new PostgresCashStorage(
+                config.Postgres.ConnectionString,
+                sp.GetRequiredService<IPostgresTransactionAccessor>()));
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IOrderService, OrderService>();

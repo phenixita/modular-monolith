@@ -8,6 +8,7 @@
     <ProjectReference Include="..\VendingMachine.Cash.Abstractions\VendingMachine.Cash.Abstractions.csproj" />
     <ProjectReference Include="..\VendingMachine.Inventory.Abstractions\VendingMachine.Inventory.Abstractions.csproj" />
     <ProjectReference Include="..\VendingMachine.Orders.Abstractions\VendingMachine.Orders.Abstractions.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence.Abstractions\VendingMachine.Persistence.Abstractions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MediatR" Version="11.0.0" />

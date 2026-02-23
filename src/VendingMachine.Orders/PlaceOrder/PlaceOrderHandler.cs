@@ -2,13 +2,14 @@ using System.Globalization;
 using MediatR;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
+using VendingMachine.Persistence.Abstractions;
 
 namespace VendingMachine.Orders.PlaceOrder;
 
 internal sealed class PlaceOrderHandler(
     IInventoryService inventoryService,
     ICashRegisterService cashRegisterService,
-    IOrdersUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderReceipt>
+    IUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderReceipt>
 {
     public async Task<OrderReceipt> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
     {
@@ -33,19 +34,19 @@ internal sealed class PlaceOrderHandler(
     }
 
     private async Task<Product> FetchProduct(string code, CancellationToken cancellationToken) =>
-        await inventoryService.GetProductByCode(code);
+        await inventoryService.GetProductByCode(code, cancellationToken);
 
     private async Task<int> FetchCurrentStock(string code, CancellationToken cancellationToken) =>
-        await inventoryService.GetStock(code);
+        await inventoryService.GetStock(code, cancellationToken);
 
     private async Task<decimal> FetchCurrentBalance(CancellationToken cancellationToken) =>
-        await cashRegisterService.GetBalance();
+        await cashRegisterService.GetBalance(cancellationToken);
 
     private async Task ChargeCustomerCash(decimal amount, CancellationToken cancellationToken) =>
-        await cashRegisterService.Charge(amount);
+        await cashRegisterService.Charge(amount, cancellationToken);
 
     private async Task RemoveProductFromStock(string code, CancellationToken cancellationToken) =>
-        await inventoryService.RemoveStock(code, 1);
+        await inventoryService.RemoveStock(code, 1, cancellationToken);
 
     private static void EnsureStockIsAvailable(string code, int stock)
     {

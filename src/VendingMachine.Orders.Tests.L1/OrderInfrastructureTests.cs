@@ -4,6 +4,7 @@ using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders.PlaceOrder;
+using VendingMachine.Persistence;
 using Xunit;
 
 namespace VendingMachine.Orders.Tests.L1;
@@ -18,15 +19,19 @@ public sealed class OrderInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var cashStorage = new PostgresCashStorage(fixture.PostgresConnectionString);
-            cashStorage.EnsureCreated();
-            cashStorage.SetBalance(5.00m);
+            var cashStorage = new PostgresCashStorage(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
+            await cashStorage.EnsureCreatedAsync();
+            await cashStorage.SetBalanceAsync(5.00m);
 
-            var inventory = new PostgresInventoryRepository(fixture.PostgresConnectionString);
+            var inventory = new PostgresInventoryRepository(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
             await inventory.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
             await inventory.SetStockAsync("COLA", 2);
 
-            var services = BuildServices(cashStorage, inventory);
+            var services = BuildServices(fixture.PostgresConnectionString, failOnRemoveStock: false);
             var orderService = services.GetRequiredService<IOrderService>();
 
             var receipt = await orderService.PlaceOrder("COLA");
@@ -35,10 +40,14 @@ public sealed class OrderInfrastructureTests
             Assert.Equal(3.50m, receipt.Balance);
             Assert.Equal(1, receipt.Stock);
 
-            var cashStorage2 = new PostgresCashStorage(fixture.PostgresConnectionString);
-            Assert.Equal(3.50m, cashStorage2.GetBalance());
+            var cashStorage2 = new PostgresCashStorage(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
+            Assert.Equal(3.50m, await cashStorage2.GetBalanceAsync());
 
-            var inventory2 = new PostgresInventoryRepository(fixture.PostgresConnectionString);
+            var inventory2 = new PostgresInventoryRepository(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
             Assert.Equal(1, await inventory2.GetQuantityAsync("COLA"));
         }
         finally
@@ -54,26 +63,32 @@ public sealed class OrderInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var cashStorage = new PostgresCashStorage(fixture.PostgresConnectionString);
-            cashStorage.EnsureCreated();
-            cashStorage.SetBalance(5.00m);
+            var cashStorage = new PostgresCashStorage(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
+            await cashStorage.EnsureCreatedAsync();
+            await cashStorage.SetBalanceAsync(5.00m);
 
-            var baseRepository = new PostgresInventoryRepository(fixture.PostgresConnectionString);
+            var baseRepository = new PostgresInventoryRepository(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
             await baseRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
             await baseRepository.SetStockAsync("COLA", 2);
-            var failingRepository = new FailingOnRemoveStockRepository(baseRepository);
-
-            var services = BuildServices(cashStorage, failingRepository);
+            var services = BuildServices(fixture.PostgresConnectionString, failOnRemoveStock: true);
             var mediator = services.GetRequiredService<IMediator>();
 
             await Assert.ThrowsAsync<InvalidOperationException>(
                 async () => await mediator.Send(new PlaceOrderCommand("COLA"))
             );
 
-            var cashStorage2 = new PostgresCashStorage(fixture.PostgresConnectionString);
-            Assert.Equal(5.00m, cashStorage2.GetBalance());
+            var cashStorage2 = new PostgresCashStorage(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
+            Assert.Equal(5.00m, await cashStorage2.GetBalanceAsync());
 
-            var inventory2 = new PostgresInventoryRepository(fixture.PostgresConnectionString);
+            var inventory2 = new PostgresInventoryRepository(
+                fixture.PostgresConnectionString,
+                new NullPostgresTransactionAccessor());
             Assert.Equal(2, await inventory2.GetQuantityAsync("COLA"));
         }
         finally
@@ -82,17 +97,29 @@ public sealed class OrderInfrastructureTests
         }
     }
 
-    private static ServiceProvider BuildServices(ICashStorage storage, IInventoryRepository repository)
+    private static ServiceProvider BuildServices(string connectionString, bool failOnRemoveStock)
     {
         var services = new ServiceCollection();
-        services.AddSingleton(storage);
-        services.AddSingleton(repository);
+        services.AddSingleton<ICashStorage>(sp =>
+            new PostgresCashStorage(
+                connectionString,
+                sp.GetRequiredService<IPostgresTransactionAccessor>()));
+        services.AddSingleton<IInventoryRepository>(sp =>
+        {
+            var repository = new PostgresInventoryRepository(
+                connectionString,
+                sp.GetRequiredService<IPostgresTransactionAccessor>());
+
+            return failOnRemoveStock
+                ? new FailingOnRemoveStockRepository(repository)
+                : repository;
+        });
         services.AddLogging();
         services.AddMediatR(
             typeof(OrderService).Assembly,
             typeof(CashRegisterService).Assembly,
             typeof(InventoryService).Assembly);
-        services.AddSingleton<IOrdersUnitOfWork, TransactionScopeOrdersUnitOfWork>();
+        services.AddPostgresPersistence(connectionString);
         services.AddSingleton<IOrderService, OrderService>();
         services.AddSingleton<IInventoryService, InventoryService>();
         services.AddSingleton<ICashRegisterService, CashRegisterService>();
@@ -124,5 +151,14 @@ public sealed class OrderInfrastructureTests
 
         public Task SetStockAsync(string code, int quantity, CancellationToken cancellationToken = default) =>
             innerRepository.SetStockAsync(code, quantity, cancellationToken);
+    }
+
+    private sealed class NullPostgresTransactionAccessor : IPostgresTransactionAccessor
+    {
+        public bool HasActiveTransaction => false;
+
+        public Npgsql.NpgsqlConnection? Connection => null;
+
+        public Npgsql.NpgsqlTransaction? Transaction => null;
     }
 }

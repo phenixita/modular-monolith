@@ -2,14 +2,14 @@ namespace VendingMachine.Inventory;
 
 public interface IInventoryService
 {
-    Task CreateProduct(Product product);
-    Task UpdateProduct(Product product);
-    Task DeleteProduct(string code);
-    Task UpsertProduct(Product product);
-    Task<Product> GetProductByCode(string code);
-    Task<IReadOnlyCollection<Product>> ListProducts();
-    Task AddStock(string code, int quantity);
-    Task RemoveStock(string code, int quantity);
-    Task SetStock(string code, int quantity);
-    Task<int> GetStock(string code);
+    Task CreateProduct(Product product, CancellationToken cancellationToken = default);
+    Task UpdateProduct(Product product, CancellationToken cancellationToken = default);
+    Task DeleteProduct(string code, CancellationToken cancellationToken = default);
+    Task UpsertProduct(Product product, CancellationToken cancellationToken = default);
+    Task<Product> GetProductByCode(string code, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<Product>> ListProducts(CancellationToken cancellationToken = default);
+    Task AddStock(string code, int quantity, CancellationToken cancellationToken = default);
+    Task RemoveStock(string code, int quantity, CancellationToken cancellationToken = default);
+    Task SetStock(string code, int quantity, CancellationToken cancellationToken = default);
+    Task<int> GetStock(string code, CancellationToken cancellationToken = default);
 }

@@ -1,12 +1,15 @@
 using Npgsql;
+using VendingMachine.Persistence;
 
 namespace VendingMachine.Inventory.Infrastructure;
 
 public sealed class PostgresInventoryRepository : IInventoryRepository
 {
     private readonly string _connectionString;
+    private readonly IPostgresTransactionAccessor _transactionAccessor;
+    private static readonly IPostgresTransactionAccessor NoTransactionAccessor = new NullPostgresTransactionAccessor();
 
-    public PostgresInventoryRepository(string connectionString)
+    public PostgresInventoryRepository(string connectionString, IPostgresTransactionAccessor? transactionAccessor = null)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -14,15 +17,17 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
         }
 
         _connectionString = connectionString;
+        _transactionAccessor = transactionAccessor ?? NoTransactionAccessor;
     }
 
     public async Task<IReadOnlyCollection<Product>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText = "SELECT code, name, price FROM inventory.inventory_items ORDER BY code;";
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -39,10 +44,11 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
     {
         var normalized = NormalizeCode(code);
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText = "SELECT code, name, price FROM inventory.inventory_items WHERE code = @code;";
         command.Parameters.AddWithValue("code", normalized);
 
@@ -59,10 +65,11 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
     {
         var normalized = NormalizeCode(code);
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText = "SELECT quantity FROM inventory.inventory_items WHERE code = @code;";
         command.Parameters.AddWithValue("code", normalized);
         var quantity = await command.ExecuteScalarAsync(cancellationToken);
@@ -74,10 +81,11 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
         ArgumentNullException.ThrowIfNull(product);
         var normalized = NormalizeCode(product.Code);
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText =
             """
             INSERT INTO inventory.inventory_items (code, name, price, quantity)
@@ -95,10 +103,11 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
     {
         var normalized = NormalizeCode(code);
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText = "DELETE FROM inventory.inventory_items WHERE code = @code;";
         command.Parameters.AddWithValue("code", normalized);
         var affected = await command.ExecuteNonQueryAsync(cancellationToken);
@@ -118,10 +127,11 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
 
         var normalized = NormalizeCode(code);
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText =
             "UPDATE inventory.inventory_items SET quantity = quantity + @quantity WHERE code = @code;";
         command.Parameters.AddWithValue("quantity", quantity);
@@ -143,31 +153,34 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
 
         var normalized = NormalizeCode(code);
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
-        await using var quantityCommand = connection.CreateCommand();
-        quantityCommand.CommandText =
-            "SELECT quantity FROM inventory.inventory_items WHERE code = @code;";
-        quantityCommand.Parameters.AddWithValue("code", normalized);
-        var currentQuantity = await quantityCommand.ExecuteScalarAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
+        command.CommandText =
+            "UPDATE inventory.inventory_items SET quantity = quantity - @quantity WHERE code = @code AND quantity >= @quantity RETURNING quantity;";
+        command.Parameters.AddWithValue("quantity", quantity);
+        command.Parameters.AddWithValue("code", normalized);
+        var result = await command.ExecuteScalarAsync(cancellationToken);
 
-        if (currentQuantity is not int available)
+        if (result is int)
+        {
+            return;
+        }
+
+        await using var existsCommand = connection.CreateCommand();
+        existsCommand.Transaction = _transactionAccessor.Transaction;
+        existsCommand.CommandText = "SELECT 1 FROM inventory.inventory_items WHERE code = @code;";
+        existsCommand.Parameters.AddWithValue("code", normalized);
+        var exists = await existsCommand.ExecuteScalarAsync(cancellationToken);
+
+        if (exists is null)
         {
             throw new KeyNotFoundException($"Unknown product code '{code}'.");
         }
 
-        if (available < quantity)
-        {
-            throw new InvalidOperationException("Not enough stock.");
-        }
-
-        await using var command = connection.CreateCommand();
-        command.CommandText =
-            "UPDATE inventory.inventory_items SET quantity = quantity - @quantity WHERE code = @code;";
-        command.Parameters.AddWithValue("quantity", quantity);
-        command.Parameters.AddWithValue("code", normalized);
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        throw new InvalidOperationException("Not enough stock.");
     }
 
     public async Task SetStockAsync(string code, int quantity, CancellationToken cancellationToken = default)
@@ -179,10 +192,11 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
 
         var normalized = NormalizeCode(code);
         await EnsureCreatedAsync(cancellationToken);
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText =
             "UPDATE inventory.inventory_items SET quantity = @quantity WHERE code = @code;";
         command.Parameters.AddWithValue("quantity", quantity);
@@ -197,10 +211,11 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
 
     public async Task EnsureCreatedAsync(CancellationToken cancellationToken = default)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
+        await using var ownedConnection = await GetOwnedConnectionIfNeeded(cancellationToken);
+        var connection = _transactionAccessor.Connection ?? ownedConnection!;
 
         await using var command = connection.CreateCommand();
+        command.Transaction = _transactionAccessor.Transaction;
         command.CommandText =
             """
             CREATE SCHEMA IF NOT EXISTS inventory;
@@ -213,6 +228,27 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
             );
             """;
         await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private async Task<NpgsqlConnection?> GetOwnedConnectionIfNeeded(CancellationToken cancellationToken)
+    {
+        if (_transactionAccessor.HasActiveTransaction)
+        {
+            return null;
+        }
+
+        var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        return connection;
+    }
+
+    private sealed class NullPostgresTransactionAccessor : IPostgresTransactionAccessor
+    {
+        public bool HasActiveTransaction => false;
+
+        public NpgsqlConnection? Connection => null;
+
+        public NpgsqlTransaction? Transaction => null;
     }
 
     private static string NormalizeCode(string code)
