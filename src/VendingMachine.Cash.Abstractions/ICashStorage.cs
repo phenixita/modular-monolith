@@ -2,9 +2,9 @@ namespace VendingMachine.Cash;
 
 public interface ICashStorage
 {
-    decimal GetBalance();
+    Task<decimal> GetBalanceAsync(CancellationToken cancellationToken = default);
 
-    void SetBalance(decimal balance);
+    Task SetBalanceAsync(decimal balance, CancellationToken cancellationToken = default);
 
-    void EnsureCreated();
+    Task EnsureCreatedAsync(CancellationToken cancellationToken = default);
 }

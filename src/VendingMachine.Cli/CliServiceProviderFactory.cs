@@ -5,6 +5,7 @@ using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
+using VendingMachine.Persistence;
 
 internal static class CliServiceProviderFactory
 {
@@ -12,6 +13,10 @@ internal static class CliServiceProviderFactory
     {
         var services = new ServiceCollection();
 
+        var configWrapper = new CliConfigurationWrapper(config);
+        services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configWrapper);
+
+        services.AddPersistence();
         services.AddVendingMachineInventoryModule();
         services.AddCashRegisterModule();
         services.AddOrdersModule(); 
@@ -24,7 +29,13 @@ internal static class CliServiceProviderFactory
 
         services.AddSingleton<IInventoryRepository>(
             new MongoInventoryRepository(config.Mongo.ConnectionString, config.Mongo.Database));
-        services.AddSingleton<ICashStorage>(new PostgresCashStorage(config.Postgres.ConnectionString));
+        
+        services.AddScoped<ICashStorage>(sp =>
+        {
+            var connectionFactory = sp.GetRequiredService<IDbConnectionFactory>();
+            return new PostgresCashStorage(connectionFactory);
+        });
+        
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IOrderService, OrderService>();

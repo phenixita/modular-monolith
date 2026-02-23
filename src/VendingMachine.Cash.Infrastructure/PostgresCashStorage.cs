@@ -1,46 +1,40 @@
-using Npgsql;
+using System.Data;
+using VendingMachine.Persistence;
 
 namespace VendingMachine.Cash;
 
 public sealed class PostgresCashStorage : ICashStorage
 {
-    private readonly string _connectionString;
+    private readonly IDbConnectionFactory _connectionFactory;
 
-    public PostgresCashStorage(string connectionString)
+    public PostgresCashStorage(IDbConnectionFactory connectionFactory)
     {
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new ArgumentException("Connection string is required.", nameof(connectionString));
-        }
-
-        _connectionString = connectionString;
+        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
     }
 
-    public decimal GetBalance()
+    public async Task<decimal> GetBalanceAsync(CancellationToken cancellationToken = default)
     {
-        EnsureCreated();
+        await EnsureCreatedAsync(cancellationToken);
 
-        using var connection = new NpgsqlConnection(_connectionString);
-        connection.Open();
+        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT value FROM cash.cash_state WHERE property = 'balance';";
-        var result = command.ExecuteScalar();
+        var result = await ExecuteScalarAsync(command, cancellationToken);
 
         return result is decimal value ? value : 0m;
     }
 
-    public void SetBalance(decimal balance)
+    public async Task SetBalanceAsync(decimal balance, CancellationToken cancellationToken = default)
     {
         if (balance < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(balance), "Balance cannot be negative.");
         }
 
-        EnsureCreated();
+        await EnsureCreatedAsync(cancellationToken);
 
-        using var connection = new NpgsqlConnection(_connectionString);
-        connection.Open();
+        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
         using var command = connection.CreateCommand();
         command.CommandText =
@@ -50,14 +44,18 @@ public sealed class PostgresCashStorage : ICashStorage
             ON CONFLICT (property) DO UPDATE
             SET value = EXCLUDED.value;
             """;
-        command.Parameters.AddWithValue("balance", balance);
-        command.ExecuteNonQuery();
+        
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "balance";
+        parameter.Value = balance;
+        command.Parameters.Add(parameter);
+        
+        await ExecuteNonQueryAsync(command, cancellationToken);
     }
 
-    public void EnsureCreated()
+    public async Task EnsureCreatedAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        connection.Open();
+        using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
         using var command = connection.CreateCommand();
         command.CommandText =
@@ -73,6 +71,16 @@ public sealed class PostgresCashStorage : ICashStorage
             VALUES ('balance', 0.00)
             ON CONFLICT (property) DO NOTHING;
             """;
-        command.ExecuteNonQuery();
+        await ExecuteNonQueryAsync(command, cancellationToken);
+    }
+
+    private static Task<object?> ExecuteScalarAsync(IDbCommand command, CancellationToken cancellationToken)
+    {
+        return Task.Run(() => command.ExecuteScalar(), cancellationToken);
+    }
+
+    private static Task<int> ExecuteNonQueryAsync(IDbCommand command, CancellationToken cancellationToken)
+    {
+        return Task.Run(() => command.ExecuteNonQuery(), cancellationToken);
     }
 }

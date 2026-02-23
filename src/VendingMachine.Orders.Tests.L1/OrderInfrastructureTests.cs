@@ -20,9 +20,10 @@ public sealed class OrderInfrastructureTests
         try
         {
             var dbName = $"vendingmachine_orders_{Guid.NewGuid():N}";
-            var cashStorage = new PostgresCashStorage(fixture.PostgresConnectionString);
-            cashStorage.EnsureCreated();
-            cashStorage.SetBalance(5.00m);
+            var factory = new TestDbConnectionFactory(fixture.PostgresConnectionString);
+            var cashStorage = new PostgresCashStorage(factory);
+            await cashStorage.EnsureCreatedAsync();
+            await cashStorage.SetBalanceAsync(5.00m);
 
             var inventory = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
             await inventory.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
@@ -37,8 +38,8 @@ public sealed class OrderInfrastructureTests
             Assert.Equal(3.50m, receipt.Balance);
             Assert.Equal(1, receipt.Stock);
 
-            var cashStorage2 = new PostgresCashStorage(fixture.PostgresConnectionString);
-            Assert.Equal(3.50m, cashStorage2.GetBalance());
+            var cashStorage2 = new PostgresCashStorage(new TestDbConnectionFactory(fixture.PostgresConnectionString));
+            Assert.Equal(3.50m, await cashStorage2.GetBalanceAsync());
 
             var inventory2 = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
             Assert.Equal(1, await inventory2.GetQuantityAsync("COLA"));
@@ -57,9 +58,10 @@ public sealed class OrderInfrastructureTests
         try
         {
             var dbName = $"vendingmachine_orders_{Guid.NewGuid():N}";
-            var cashStorage = new PostgresCashStorage(fixture.PostgresConnectionString);
-            cashStorage.EnsureCreated();
-            cashStorage.SetBalance(5.00m);
+            var factory = new TestDbConnectionFactory(fixture.PostgresConnectionString);
+            var cashStorage = new PostgresCashStorage(factory);
+            await cashStorage.EnsureCreatedAsync();
+            await cashStorage.SetBalanceAsync(5.00m);
 
             var mongoRepository = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
             await mongoRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
@@ -75,8 +77,8 @@ public sealed class OrderInfrastructureTests
 
             Assert.Contains("Charged cash has been refunded", exception.Message);
 
-            var cashStorage2 = new PostgresCashStorage(fixture.PostgresConnectionString);
-            Assert.Equal(5.00m, cashStorage2.GetBalance());
+            var cashStorage2 = new PostgresCashStorage(new TestDbConnectionFactory(fixture.PostgresConnectionString));
+            Assert.Equal(5.00m, await cashStorage2.GetBalanceAsync());
 
             var inventory2 = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
             Assert.Equal(2, await inventory2.GetQuantityAsync("COLA"));
@@ -98,6 +100,8 @@ public sealed class OrderInfrastructureTests
             typeof(CashRegisterService).Assembly,
             typeof(InventoryService).Assembly);
         services.AddSingleton<IOrderService, OrderService>();
+        services.AddSingleton<IInventoryService, InventoryService>();
+        services.AddSingleton<ICashRegisterService, CashRegisterService>();
         return services.BuildServiceProvider();
     }
 

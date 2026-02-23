@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VendingMachine.Cash.Abstractions\VendingMachine.Cash.Abstractions.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence.Abstractions\VendingMachine.Persistence.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

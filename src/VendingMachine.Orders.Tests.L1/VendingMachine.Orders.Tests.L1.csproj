@@ -10,6 +10,8 @@
     <ProjectReference Include="..\VendingMachine.Cash\VendingMachine.Cash.csproj" />
     <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" />
     <ProjectReference Include="..\VendingMachine.Inventory.Infrastructure\VendingMachine.Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence\VendingMachine.Persistence.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence.Abstractions\VendingMachine.Persistence.Abstractions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Testcontainers" Version="4.8.1" />

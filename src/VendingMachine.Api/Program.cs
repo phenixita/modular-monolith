@@ -5,6 +5,7 @@ using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
+using VendingMachine.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 
+builder.Services.AddPersistence();
 builder.Services.AddVendingMachineInventoryModule();
 builder.Services.AddCashRegisterModule();
 builder.Services.AddOrdersModule();
@@ -21,8 +23,11 @@ var infrastructureOptions = InfrastructureOptions.Load(builder.Configuration);
 builder.Services.AddSingleton<IInventoryRepository>(_ =>
     new MongoInventoryRepository(infrastructureOptions.Mongo.ConnectionString, infrastructureOptions.Mongo.Database));
 
-builder.Services.AddSingleton<ICashStorage>(_ =>
-    new PostgresCashStorage(infrastructureOptions.Postgres.ConnectionString));
+builder.Services.AddScoped<ICashStorage>(sp =>
+{
+    var connectionFactory = sp.GetRequiredService<IDbConnectionFactory>();
+    return new PostgresCashStorage(connectionFactory);
+});
 
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICashRegisterService, CashRegisterService>();

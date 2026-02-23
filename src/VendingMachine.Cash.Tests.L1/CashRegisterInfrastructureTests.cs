@@ -15,9 +15,10 @@ public sealed class CashRegisterInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var storage1 = new PostgresCashStorage(fixture.ConnectionString);
-            storage1.EnsureCreated();
-            storage1.SetBalance(0m);
+            var factory = new TestDbConnectionFactory(fixture.ConnectionString);
+            var storage1 = new PostgresCashStorage(factory);
+            await storage1.EnsureCreatedAsync();
+            await storage1.SetBalanceAsync(0m);
 
             var register1 = BuildRegister(storage1);
             await register1.Insert(2.00m);
@@ -25,13 +26,13 @@ public sealed class CashRegisterInfrastructureTests
 
             Assert.Equal(0.75m, await register1.GetBalance());
 
-            var register2 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString));
+            var register2 = BuildRegister(new PostgresCashStorage(new TestDbConnectionFactory(fixture.ConnectionString)));
             Assert.Equal(0.75m, await register2.GetBalance());
 
             var refunded = await register2.RefundAll();
             Assert.Equal(0.75m, refunded);
 
-            var register3 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString));
+            var register3 = BuildRegister(new PostgresCashStorage(new TestDbConnectionFactory(fixture.ConnectionString)));
             Assert.Equal(0m, await register3.GetBalance());
         }
         finally

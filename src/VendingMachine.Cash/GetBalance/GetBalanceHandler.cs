@@ -5,6 +5,8 @@ namespace VendingMachine.Cash.GetBalance;
 internal sealed class GetBalanceHandler(ICashStorage storage)
     : IRequestHandler<GetBalanceQuery, decimal>
 {
-    public Task<decimal> Handle(GetBalanceQuery request, CancellationToken cancellationToken) =>
-        Task.FromResult(storage.GetBalance());
+    public async Task<decimal> Handle(GetBalanceQuery request, CancellationToken cancellationToken)
+    {
+        return await storage.GetBalanceAsync(cancellationToken);
+    }
 }

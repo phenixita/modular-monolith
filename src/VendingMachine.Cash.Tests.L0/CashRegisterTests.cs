@@ -14,7 +14,7 @@ public sealed class CashRegisterTests
     [InlineData(5, 5, 10)]
     public async Task Insert_IncreasesBalance_FromExamples(decimal initialBalance, decimal amount, decimal expectedBalance)
     {
-        var register = BuildCashRegisterService(initialBalance);
+        var register = await BuildCashRegisterServiceAsync(initialBalance);
 
         await register.Insert(amount);
 
@@ -24,7 +24,7 @@ public sealed class CashRegisterTests
     [Fact]
     public async Task Insert_IncreasesBalance()
     {
-        var register = BuildCashRegisterService();
+        var register = await BuildCashRegisterServiceAsync();
 
         await register.Insert(2.50m);
 
@@ -34,7 +34,7 @@ public sealed class CashRegisterTests
     [Fact]
     public async Task Charge_DecreasesBalance()
     {
-        var register = BuildCashRegisterService(5.00m); 
+        var register = await BuildCashRegisterServiceAsync(5.00m); 
 
         await register.Charge(1.25m);
 
@@ -43,10 +43,10 @@ public sealed class CashRegisterTests
 
     
 
-    private static CashRegisterService BuildCashRegisterService(decimal initialBalance = 0)
+    private static async Task<CashRegisterService> BuildCashRegisterServiceAsync(decimal initialBalance = 0)
     {
         var storage = new InMemoryCashStorage();
-        storage.SetBalance(initialBalance);
+        await storage.SetBalanceAsync(initialBalance);
         return BuildCashRegister(storage);
     }
 

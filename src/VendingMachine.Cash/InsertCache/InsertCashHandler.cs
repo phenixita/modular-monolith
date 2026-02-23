@@ -4,12 +4,12 @@ namespace VendingMachine.Cash.InsertCache;
 
 internal sealed class InsertCashHandler(ICashStorage storage) : IRequestHandler<InsertCashCommand, Unit>
 {
-    public Task<Unit> Handle(InsertCashCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(InsertCashCommand request, CancellationToken cancellationToken)
     {
         ValidateAmountIsPositive(request.Amount);
-        var updatedBalance = CalculateUpdatedBalance(request.Amount);
-        PersistUpdatedBalance(updatedBalance);
-        return Task.FromResult(Unit.Value);
+        var updatedBalance = await CalculateUpdatedBalanceAsync(request.Amount, cancellationToken);
+        await PersistUpdatedBalanceAsync(updatedBalance, cancellationToken);
+        return Unit.Value;
     }
 
     private static void ValidateAmountIsPositive(decimal amount)
@@ -20,9 +20,14 @@ internal sealed class InsertCashHandler(ICashStorage storage) : IRequestHandler<
         }
     }
 
-    private decimal CalculateUpdatedBalance(decimal amount) =>
-        storage.GetBalance() + amount;
+    private async Task<decimal> CalculateUpdatedBalanceAsync(decimal amount, CancellationToken cancellationToken)
+    {
+        var currentBalance = await storage.GetBalanceAsync(cancellationToken);
+        return currentBalance + amount;
+    }
 
-    private void PersistUpdatedBalance(decimal balance) =>
-        storage.SetBalance(balance);
+    private Task PersistUpdatedBalanceAsync(decimal balance, CancellationToken cancellationToken)
+    {
+        return storage.SetBalanceAsync(balance, cancellationToken);
+    }
 }

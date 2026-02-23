@@ -16,7 +16,7 @@ public sealed class OrderPlacementTests
     public async Task PlaceOrder_WithStockAndBalance_ReturnsReceiptAndUpdatesState()
     {
         var storage = new InMemoryCashStorage();
-        storage.SetBalance(5.00m);
+        await storage.SetBalanceAsync(5.00m);
 
         var repository = new InMemoryInventoryRepository();
         await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
@@ -31,7 +31,7 @@ public sealed class OrderPlacementTests
         Assert.Equal(1.50m, receipt.Price);
         Assert.Equal(3.50m, receipt.Balance);
         Assert.Equal(1, receipt.Stock);
-        Assert.Equal(3.50m, storage.GetBalance());
+        Assert.Equal(3.50m, await storage.GetBalanceAsync());
         Assert.Equal(1, await repository.GetQuantityAsync("COLA"));
     }
 
@@ -39,7 +39,7 @@ public sealed class OrderPlacementTests
     public async Task PlaceOrder_WithInsufficientBalance_Throws()
     {
         var storage = new InMemoryCashStorage();
-        storage.SetBalance(0.50m);
+        await storage.SetBalanceAsync(0.50m);
         var repository = new InMemoryInventoryRepository();
         await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
         await repository.SetStockAsync("COLA", 1);
@@ -56,7 +56,7 @@ public sealed class OrderPlacementTests
     public async Task PlaceOrder_WithNoStock_Throws()
     {
         var storage = new InMemoryCashStorage();
-        storage.SetBalance(5.00m);
+        await storage.SetBalanceAsync(5.00m);
         var repository = new InMemoryInventoryRepository();
         await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
         await repository.SetStockAsync("COLA", 0);
@@ -73,7 +73,7 @@ public sealed class OrderPlacementTests
     public async Task PlaceOrder_WithUnknownProduct_Throws()
     {
         var storage = new InMemoryCashStorage();
-        storage.SetBalance(5.00m);
+        await storage.SetBalanceAsync(5.00m);
         var repository = new InMemoryInventoryRepository();
 
         var services = BuildServices(storage, repository);
@@ -88,7 +88,7 @@ public sealed class OrderPlacementTests
     public async Task PlaceOrderSaga_WhenStockUpdateFails_RefundsChargedCashAndThrowsCompensatedError()
     {
         var storage = new InMemoryCashStorage();
-        storage.SetBalance(5.00m);
+        await storage.SetBalanceAsync(5.00m);
         var baseRepository = new InMemoryInventoryRepository();
         await baseRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
         await baseRepository.SetStockAsync("COLA", 2);
@@ -102,7 +102,7 @@ public sealed class OrderPlacementTests
         );
 
         Assert.Contains("Charged cash has been refunded", exception.Message);
-        Assert.Equal(5.00m, storage.GetBalance());
+        Assert.Equal(5.00m, await storage.GetBalanceAsync());
         Assert.Equal(2, await baseRepository.GetQuantityAsync("COLA"));
     }
 
