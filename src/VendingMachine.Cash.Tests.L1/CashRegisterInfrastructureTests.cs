@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Persistence.Abstractions;
+using VendingMachine.Persistence;
 using Xunit;
 
 namespace VendingMachine.Cash.Tests.L1;
@@ -15,7 +15,7 @@ public sealed class CashRegisterInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var storage1 = new PostgresCashStorage(fixture.ConnectionString, new NullPostgresTransactionAccessor());
+            var storage1 = new PostgresCashStorage(fixture.ConnectionString, new NullTransactionContext());
             await storage1.EnsureCreatedAsync();
             await storage1.SetBalanceAsync(0m);
 
@@ -25,13 +25,13 @@ public sealed class CashRegisterInfrastructureTests
 
             Assert.Equal(0.75m, await register1.GetBalance());
 
-            var register2 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString, new NullPostgresTransactionAccessor()));
+            var register2 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString, new NullTransactionContext()));
             Assert.Equal(0.75m, await register2.GetBalance());
 
             var refunded = await register2.RefundAll();
             Assert.Equal(0.75m, refunded);
 
-            var register3 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString, new NullPostgresTransactionAccessor()));
+            var register3 = BuildRegister(new PostgresCashStorage(fixture.ConnectionString, new NullTransactionContext()));
             Assert.Equal(0m, await register3.GetBalance());
         }
         finally
@@ -60,7 +60,7 @@ public sealed class CashRegisterInfrastructureTests
             action(cancellationToken);
     }
 
-    private sealed class NullPostgresTransactionAccessor : VendingMachine.Persistence.IPostgresTransactionAccessor
+    private sealed class NullTransactionContext : VendingMachine.Persistence.ITransactionContext
     {
         public bool HasActiveTransaction => false;
 

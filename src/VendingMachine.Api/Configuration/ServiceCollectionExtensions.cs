@@ -26,7 +26,7 @@ internal static class ServiceCollectionExtensions
 
         services.AddInventoryModule();
 
-        services.AddCashRegisterModule();      
+        services.AddCashRegisterModule();
 
         services.AddOrdersModule();
 

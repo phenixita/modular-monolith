@@ -76,10 +76,8 @@ public sealed class LoadBeveragesTests
     private static IInventoryService BuildInventoryService(IInventoryRepository repository)
     {
         var services = new ServiceCollection();
-        services.AddSingleton(repository);
         services.AddLogging();
-        services.AddInventoryModule();
-        services.AddSingleton<IInventoryService, InventoryService>();
+        services.AddInventoryModuleForTesting(repository);
         return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
     }
 }

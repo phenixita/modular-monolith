@@ -14,17 +14,25 @@ namespace VendingMachine.Inventory
          {
              var options = sp.GetRequiredService<IOptions<InfrastructureOptions>>();
              var connectionString = options.Value.ConnectionString;
-             return new PostgresInventoryRepository(connectionString, sp.GetRequiredService<IPostgresTransactionAccessor>());
+             return new PostgresInventoryRepository(connectionString, sp.GetRequiredService<ITransactionContext>());
          })
          .AddScoped<IInventoryService, InventoryService>()
          .AddMediatR(typeof(InventoryService).Assembly);
+
+        public static IServiceCollection AddInventoryModuleForTesting(
+            this IServiceCollection services,
+            IInventoryRepository repository) =>
+            services
+            .AddSingleton(repository)
+            .AddScoped<IInventoryService, InventoryService>()
+            .AddMediatR(typeof(InventoryService).Assembly);
 
 
         // public static IServiceCollection WithPostgreStorage(this IServiceCollection services, string connectionString) =>
         //    services.AddScoped<IInventoryRepository>(sp =>
         //             new PostgresInventoryRepository(
         //                 connectionString,
-        //                 sp.GetRequiredService<IPostgresTransactionAccessor>()));
+        //                 sp.GetRequiredService<ITransactionContext>()));
 
 
     }

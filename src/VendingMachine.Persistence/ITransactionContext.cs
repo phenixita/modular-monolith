@@ -2,7 +2,7 @@ using Npgsql;
 
 namespace VendingMachine.Persistence;
 
-public interface IPostgresTransactionAccessor
+public interface ITransactionContext
 {
     bool HasActiveTransaction { get; }
 

@@ -21,13 +21,13 @@ public sealed class OrderInfrastructureTests
         {
             var cashStorage = new PostgresCashStorage(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             await cashStorage.EnsureCreatedAsync();
             await cashStorage.SetBalanceAsync(5.00m);
 
             var inventory = new PostgresInventoryRepository(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             await inventory.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
             await inventory.SetStockAsync("COLA", 2);
 
@@ -42,12 +42,12 @@ public sealed class OrderInfrastructureTests
 
             var cashStorage2 = new PostgresCashStorage(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             Assert.Equal(3.50m, await cashStorage2.GetBalanceAsync());
 
             var inventory2 = new PostgresInventoryRepository(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             Assert.Equal(1, await inventory2.GetQuantityAsync("COLA"));
         }
         finally
@@ -65,13 +65,13 @@ public sealed class OrderInfrastructureTests
         {
             var cashStorage = new PostgresCashStorage(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             await cashStorage.EnsureCreatedAsync();
             await cashStorage.SetBalanceAsync(5.00m);
 
             var baseRepository = new PostgresInventoryRepository(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             await baseRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
             await baseRepository.SetStockAsync("COLA", 2);
             var services = BuildServices(fixture.PostgresConnectionString, failOnRemoveStock: true);
@@ -83,12 +83,12 @@ public sealed class OrderInfrastructureTests
 
             var cashStorage2 = new PostgresCashStorage(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             Assert.Equal(5.00m, await cashStorage2.GetBalanceAsync());
 
             var inventory2 = new PostgresInventoryRepository(
                 fixture.PostgresConnectionString,
-                new NullPostgresTransactionAccessor());
+                new NullTransactionContext());
             Assert.Equal(2, await inventory2.GetQuantityAsync("COLA"));
         }
         finally
@@ -103,12 +103,12 @@ public sealed class OrderInfrastructureTests
         services.AddSingleton<ICashStorage>(sp =>
             new PostgresCashStorage(
                 connectionString,
-                sp.GetRequiredService<IPostgresTransactionAccessor>()));
+                sp.GetRequiredService<ITransactionContext>()));
         services.AddSingleton<IInventoryRepository>(sp =>
         {
             var repository = new PostgresInventoryRepository(
                 connectionString,
-                sp.GetRequiredService<IPostgresTransactionAccessor>());
+                sp.GetRequiredService<ITransactionContext>());
 
             return failOnRemoveStock
                 ? new FailingOnRemoveStockRepository(repository)
@@ -153,7 +153,7 @@ public sealed class OrderInfrastructureTests
             innerRepository.SetStockAsync(code, quantity, cancellationToken);
     }
 
-    private sealed class NullPostgresTransactionAccessor : IPostgresTransactionAccessor
+    private sealed class NullTransactionContext : ITransactionContext
     {
         public bool HasActiveTransaction => false;
 

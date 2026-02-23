@@ -1,4 +1,4 @@
-namespace VendingMachine.;
+namespace VendingMachine.Inventory.Infrastructure;
 
 internal sealed class InfrastructureOptions
 {

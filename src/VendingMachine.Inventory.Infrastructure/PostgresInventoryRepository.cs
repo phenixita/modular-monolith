@@ -6,10 +6,10 @@ namespace VendingMachine.Inventory.Infrastructure;
 public sealed class PostgresInventoryRepository : IInventoryRepository
 {
     private readonly string _connectionString;
-    private readonly IPostgresTransactionAccessor _transactionAccessor;
-    private static readonly IPostgresTransactionAccessor NoTransactionAccessor = new NullPostgresTransactionAccessor();
+    private readonly ITransactionContext _transactionAccessor;
+    private static readonly ITransactionContext NoTransactionAccessor = new NullTransactionContext();
 
-    public PostgresInventoryRepository(string connectionString, IPostgresTransactionAccessor? transactionAccessor = null)
+    public PostgresInventoryRepository(string connectionString, ITransactionContext? transactionAccessor = null)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -242,7 +242,7 @@ public sealed class PostgresInventoryRepository : IInventoryRepository
         return connection;
     }
 
-    private sealed class NullPostgresTransactionAccessor : IPostgresTransactionAccessor
+    private sealed class NullTransactionContext : ITransactionContext
     {
         public bool HasActiveTransaction => false;
 

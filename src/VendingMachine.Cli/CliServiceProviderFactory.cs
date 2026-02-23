@@ -26,11 +26,11 @@ internal static class CliServiceProviderFactory
         services.AddSingleton<IInventoryRepository>(sp =>
             new PostgresInventoryRepository(
                 config.Postgres.ConnectionString,
-                sp.GetRequiredService<IPostgresTransactionAccessor>()));
+                sp.GetRequiredService<ITransactionContext>()));
         services.AddSingleton<ICashStorage>(sp =>
             new PostgresCashStorage(
                 config.Postgres.ConnectionString,
-                sp.GetRequiredService<IPostgresTransactionAccessor>()));
+                sp.GetRequiredService<ITransactionContext>()));
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IOrderService, OrderService>();

@@ -1,9 +1,7 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
-using VendingMachine.Persistence.Abstractions;
 using Xunit;
 
 namespace VendingMachine.Orders.Tests.L0;
@@ -86,26 +84,10 @@ public sealed class OrderPlacementTests
     private static ServiceProvider BuildServices(ICashStorage storage, IInventoryRepository repository)
     {
         var services = new ServiceCollection();
-        services.AddSingleton(storage);
-        services.AddSingleton(repository);
         services.AddLogging();
-        services.AddMediatR(
-            typeof(OrderService).Assembly,
-            typeof(CashRegisterService).Assembly,
-            typeof(InventoryService).Assembly);
-        services.AddSingleton<IUnitOfWork, NoOpUnitOfWork>();
-        services.AddSingleton<IOrderService, OrderService>();
-        services.AddSingleton<IInventoryService, InventoryService>();
-        services.AddSingleton<ICashRegisterService, CashRegisterService>();
+        services.AddCashRegisterModuleForTesting(storage);
+        services.AddInventoryModuleForTesting(repository);
+        services.AddOrdersModuleForTesting();
         return services.BuildServiceProvider();
-    }
-
-    private sealed class NoOpUnitOfWork : IUnitOfWork
-    {
-        public Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default) =>
-            action(cancellationToken);
-
-        public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default) =>
-            action(cancellationToken);
     }
 }

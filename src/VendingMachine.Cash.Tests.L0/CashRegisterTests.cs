@@ -1,6 +1,4 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Persistence.Abstractions;
 using Xunit;
 
 namespace VendingMachine.Cash.Tests.L0;
@@ -43,30 +41,18 @@ public sealed class CashRegisterTests
 
 
 
-    private static CashRegisterService BuildCashRegisterService(decimal initialBalance = 0)
+    private static ICashRegisterService BuildCashRegisterService(decimal initialBalance = 0)
     {
         var storage = new InMemoryCashStorage();
         storage.SetBalanceAsync(initialBalance).GetAwaiter().GetResult();
         return BuildCashRegister(storage);
     }
 
-    private static CashRegisterService BuildCashRegister(ICashStorage storage)
+    private static ICashRegisterService BuildCashRegister(ICashStorage storage)
     {
         var services = new ServiceCollection();
-        services.AddSingleton(storage);
-        services.AddSingleton<IUnitOfWork, NoOpUnitOfWork>();
         services.AddLogging();
-        services.AddMediatR(typeof(CashRegisterService).Assembly);
-        services.AddSingleton<CashRegisterService>();
-        return services.BuildServiceProvider().GetRequiredService<CashRegisterService>();
-    }
-
-    private sealed class NoOpUnitOfWork : IUnitOfWork
-    {
-        public Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default) =>
-            action(cancellationToken);
-
-        public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default) =>
-            action(cancellationToken);
+        services.AddCashRegisterModuleForTesting(storage);
+        return services.BuildServiceProvider().GetRequiredService<ICashRegisterService>();
     }
 }
