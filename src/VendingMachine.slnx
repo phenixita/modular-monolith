@@ -23,4 +23,6 @@
     <Project Path="VendingMachine.Api/VendingMachine.Api.csproj" />
   </Folder>
   <Project Path="VendingMachine.Cli/VendingMachine.Cli.csproj" />
+  <Project Path="VendingMachine.Persistence.Abstractions/VendingMachine.Persistence.Abstractions.csproj" />
+  <Project Path="VendingMachine.Persistence/VendingMachine.Persistence.csproj" />
 </Solution>
