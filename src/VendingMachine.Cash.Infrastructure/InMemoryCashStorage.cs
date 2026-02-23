@@ -4,9 +4,10 @@ public sealed class InMemoryCashStorage : ICashStorage
 {
     private decimal _balance;
 
-    public decimal GetBalance() => _balance;
+    public Task<decimal> GetBalanceAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(_balance);
 
-    public void SetBalance(decimal balance)
+    public Task SetBalanceAsync(decimal balance, CancellationToken cancellationToken = default)
     {
         if (balance < 0)
         {
@@ -14,10 +15,12 @@ public sealed class InMemoryCashStorage : ICashStorage
         }
 
         _balance = balance;
+        return Task.CompletedTask;
     }
 
-    public void EnsureCreated()
+    public Task EnsureCreatedAsync(CancellationToken cancellationToken = default)
     {
         // No-op for in-memory storage.
+        return Task.CompletedTask;
     }
 }

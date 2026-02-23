@@ -4,13 +4,13 @@ namespace VendingMachine.Cash.Charge;
 
 internal sealed class ChargeCashHandler(ICashStorage storage) : IRequestHandler<ChargeCashCommand, Unit>
 {
-    public Task<Unit> Handle(ChargeCashCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(ChargeCashCommand request, CancellationToken cancellationToken)
     {
         ValidateAmountIsPositive(request.Amount);
-        var balance = storage.GetBalance();
+        var balance = await storage.GetBalanceAsync(cancellationToken);
         EnsureBalanceIsSufficient(balance, request.Amount);
-        DeductAmountFromBalance(balance, request.Amount);
-        return Task.FromResult(Unit.Value);
+        await DeductAmountFromBalance(balance, request.Amount, cancellationToken);
+        return Unit.Value;
     }
 
     private static void ValidateAmountIsPositive(decimal amount)
@@ -29,6 +29,6 @@ internal sealed class ChargeCashHandler(ICashStorage storage) : IRequestHandler<
         }
     }
 
-    private void DeductAmountFromBalance(decimal balance, decimal amount) =>
-        storage.SetBalance(balance - amount);
+    private Task DeductAmountFromBalance(decimal balance, decimal amount, CancellationToken cancellationToken) =>
+        storage.SetBalanceAsync(balance - amount, cancellationToken);
 }

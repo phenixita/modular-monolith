@@ -1,10 +1,10 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
+using VendingMachine.Persistence;
 
 internal static class CliServiceProviderFactory
 {
@@ -12,9 +12,10 @@ internal static class CliServiceProviderFactory
     {
         var services = new ServiceCollection();
 
-        services.AddVendingMachineInventoryModule();
+        services.AddInventoryModule();
         services.AddCashRegisterModule();
-        services.AddOrdersModule(); 
+        services.AddOrdersModule();
+        services.AddPostgresPersistence(config.Postgres.ConnectionString);
 
         services.AddLogging(builder =>
         {
@@ -22,9 +23,14 @@ internal static class CliServiceProviderFactory
             builder.SetMinimumLevel(LogLevel.Trace);
         });
 
-        services.AddSingleton<IInventoryRepository>(
-            new MongoInventoryRepository(config.Mongo.ConnectionString, config.Mongo.Database));
-        services.AddSingleton<ICashStorage>(new PostgresCashStorage(config.Postgres.ConnectionString));
+        services.AddSingleton<IInventoryRepository>(sp =>
+            new PostgresInventoryRepository(
+                config.Postgres.ConnectionString,
+                sp.GetRequiredService<ITransactionContext>()));
+        services.AddSingleton<ICashStorage>(sp =>
+            new PostgresCashStorage(
+                config.Postgres.ConnectionString,
+                sp.GetRequiredService<ITransactionContext>()));
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IOrderService, OrderService>();

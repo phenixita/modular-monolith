@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\VendingMachine.Inventory.Infrastructure\VendingMachine.Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence.Abstractions\VendingMachine.Persistence.Abstractions.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MediatR" Version="11.0.0" />

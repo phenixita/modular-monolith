@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:5000
-@productCode = COLA
+@productCode = PEPSI
 
 ### 1) Create product (inventory product create)
 POST {{baseUrl}}/api/inventory/products

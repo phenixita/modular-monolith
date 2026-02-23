@@ -1,6 +1,4 @@
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using Xunit;
 
@@ -140,10 +138,8 @@ public sealed class ProductManagementTests
     private static IInventoryService BuildInventoryService(IInventoryRepository repository)
     {
         var services = new ServiceCollection();
-        services.AddSingleton(repository);
         services.AddLogging();
-        services.AddMediatR(typeof(InventoryService).Assembly);
-        services.AddSingleton<IInventoryService, InventoryService>();
+        services.AddInventoryModuleForTesting(repository);
         return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
     }
 }

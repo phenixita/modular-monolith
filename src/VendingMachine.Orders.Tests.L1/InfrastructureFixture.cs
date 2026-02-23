@@ -1,6 +1,6 @@
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
-using Testcontainers.MongoDb;
+using Npgsql;
 using Xunit;
 
 namespace VendingMachine.Orders.Tests.L1;
@@ -19,30 +19,39 @@ public sealed class InfrastructureFixture : IAsyncLifetime
         .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged("database system is ready to accept connections"))
         .Build();
 
-    private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder()
-        .WithImage("mongo:7")
-        .WithName($"vendingmachine-orders-mongo-{Guid.NewGuid():N}")
-        .WithUsername("root")
-        .WithPassword("root")
-        .Build();
-
     public string PostgresConnectionString { get; private set; } = string.Empty;
-
-    public string MongoConnectionString { get; private set; } = string.Empty;
 
     public async Task InitializeAsync()
     {
         await _postgresContainer.StartAsync();
         PostgresConnectionString =
-            $"Host={_postgresContainer.Hostname};Port={_postgresContainer.GetMappedPublicPort(PostgresPort)};Username=postgres;Password=postgres;Database=vendingmachine_cash;SSL Mode=Disable;Trust Server Certificate=true";
+            $"Host={_postgresContainer.Hostname};Port={_postgresContainer.GetMappedPublicPort(PostgresPort)};Username=postgres;Password=postgres;Database=vendingmachine_cash;SSL Mode=Disable;Trust Server Certificate=true;Pooling=false";
+        await WaitUntilDatabaseReadyAsync();
 
-        await _mongoContainer.StartAsync();
-        MongoConnectionString = _mongoContainer.GetConnectionString();
     }
 
     public async Task DisposeAsync()
     {
         await _postgresContainer.DisposeAsync();
-        await _mongoContainer.DisposeAsync();
+    }
+
+    private async Task WaitUntilDatabaseReadyAsync()
+    {
+        var timeoutAt = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < timeoutAt)
+        {
+            try
+            {
+                await using var connection = new NpgsqlConnection(PostgresConnectionString);
+                await connection.OpenAsync();
+                return;
+            }
+            catch (NpgsqlException)
+            {
+                await Task.Delay(250);
+            }
+        }
+
+        throw new TimeoutException("PostgreSQL container did not become ready in time.");
     }
 }

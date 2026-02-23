@@ -8,5 +8,6 @@
     <ProjectReference Include="..\VendingMachine.Cash\VendingMachine.Cash.csproj" />
     <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" />
     <ProjectReference Include="..\VendingMachine.Orders\VendingMachine.Orders.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence\VendingMachine.Persistence.csproj" />
   </ItemGroup>
 </Project>

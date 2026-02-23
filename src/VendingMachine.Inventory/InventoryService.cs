@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using VendingMachine.Inventory._Infrastructure;
 using VendingMachine.Inventory.CreateProduct;
 using VendingMachine.Inventory.DeleteProduct;
-using VendingMachine.Inventory.GetProduct; 
+using VendingMachine.Inventory.GetProduct;
 using VendingMachine.Inventory.ListProducts;
 using VendingMachine.Inventory.RemoveStock;
 using VendingMachine.Inventory.Stock.Add;
@@ -25,72 +25,72 @@ public sealed class InventoryService : IInventoryService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public Task CreateProduct(Product product) =>
+    public Task CreateProduct(Product product, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.CreateProduct",
-            () => _mediator.Send(new CreateProductCommand(product)),
+            () => _mediator.Send(new CreateProductCommand(product), cancellationToken),
             parameters: new { Product = product });
 
-    public Task UpdateProduct(Product product) =>
+    public Task UpdateProduct(Product product, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.UpdateProduct",
-            () => _mediator.Send(new UpdateProductCommand(product)),
+            () => _mediator.Send(new UpdateProductCommand(product), cancellationToken),
             parameters: new { Product = product });
 
-    public Task DeleteProduct(string code) =>
+    public Task DeleteProduct(string code, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.DeleteProduct",
-            () => _mediator.Send(new DeleteProductCommand(code)),
+            () => _mediator.Send(new DeleteProductCommand(code), cancellationToken),
             parameters: new { Code = code });
 
-    public Task UpsertProduct(Product product) =>
+    public Task UpsertProduct(Product product, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.UpsertProduct",
-            () => _mediator.Send(new UpsertProductCommand(product)),
+            () => _mediator.Send(new UpsertProductCommand(product), cancellationToken),
             parameters: new { Product = product });
 
-    public Task<Product> GetProductByCode(string code) =>
+    public Task<Product> GetProductByCode(string code, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.GetProductByCode",
-            () => _mediator.Send(new GetProductByCodeQuery(code)),
+            () => _mediator.Send(new GetProductByCodeQuery(code), cancellationToken),
             parameters: new { Code = code });
 
-    public Task<IReadOnlyCollection<Product>> ListProducts() =>
+    public Task<IReadOnlyCollection<Product>> ListProducts(CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.ListProducts",
-            () => _mediator.Send(new ListProductsQuery()));
+            () => _mediator.Send(new ListProductsQuery(), cancellationToken));
 
-    public Task AddStock(string code, int quantity) =>
+    public Task AddStock(string code, int quantity, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.AddStock",
-            () => _mediator.Send(new AddStockCommand(code, quantity)),
+            () => _mediator.Send(new AddStockCommand(code, quantity), cancellationToken),
             parameters: new { Code = code, Quantity = quantity });
 
-    public Task RemoveStock(string code, int quantity) =>
+    public Task RemoveStock(string code, int quantity, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.RemoveStock",
-            () => _mediator.Send(new RemoveStockCommand(code, quantity)),
+            () => _mediator.Send(new RemoveStockCommand(code, quantity), cancellationToken),
             parameters: new { Code = code, Quantity = quantity });
 
-    public Task SetStock(string code, int quantity) =>
+    public Task SetStock(string code, int quantity, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.SetStock",
-            () => _mediator.Send(new SetStockCommand(code, quantity)),
+            () => _mediator.Send(new SetStockCommand(code, quantity), cancellationToken),
             parameters: new { Code = code, Quantity = quantity });
 
-    public Task<int> GetStock(string code) =>
+    public Task<int> GetStock(string code, CancellationToken cancellationToken = default) =>
         LoggingHelper.ExecuteWithLoggingAsync(
             _logger,
             "InventoryService.GetStock",
-            () => _mediator.Send(new GetStockQuery(code)),
+            () => _mediator.Send(new GetStockQuery(code), cancellationToken),
             parameters: new { Code = code });
 }

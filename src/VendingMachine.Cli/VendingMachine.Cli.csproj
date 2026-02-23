@@ -10,6 +10,7 @@
     <ProjectReference Include="..\VendingMachine.Cash\VendingMachine.Cash.csproj" />
     <ProjectReference Include="..\VendingMachine.Inventory\VendingMachine.Inventory.csproj" /> 
     <ProjectReference Include="..\VendingMachine.Orders\VendingMachine.Orders.csproj" />
+    <ProjectReference Include="..\VendingMachine.Persistence\VendingMachine.Persistence.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
