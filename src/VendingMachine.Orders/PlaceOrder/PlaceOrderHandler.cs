@@ -7,25 +7,29 @@ namespace VendingMachine.Orders.PlaceOrder;
 
 internal sealed class PlaceOrderHandler(
     IInventoryService inventoryService,
-    ICashRegisterService cashRegisterService) : IRequestHandler<PlaceOrderCommand, OrderReceipt>
+    ICashRegisterService cashRegisterService,
+    IOrdersUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderReceipt>
 {
     public async Task<OrderReceipt> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
     {
-        var normalizedCode = NormalizeCode(request.Code);
-        var product = await FetchProduct(normalizedCode, cancellationToken);
-        var currentStock = await FetchCurrentStock(normalizedCode, cancellationToken);
-        var currentBalance = await FetchCurrentBalance(cancellationToken);
+        return await unitOfWork.ExecuteAsync(async ct =>
+        {
+            var normalizedCode = NormalizeCode(request.Code);
+            var product = await FetchProduct(normalizedCode, ct);
+            var currentStock = await FetchCurrentStock(normalizedCode, ct);
+            var currentBalance = await FetchCurrentBalance(ct);
 
-        EnsureStockIsAvailable(normalizedCode, currentStock);
-        EnsureBalanceIsSufficient(product.Price, currentBalance);
+            EnsureStockIsAvailable(normalizedCode, currentStock);
+            EnsureBalanceIsSufficient(product.Price, currentBalance);
 
-        await ChargeCustomerCash(product.Price, cancellationToken);
-        await RemoveProductFromStock(normalizedCode, cancellationToken);
+            await ChargeCustomerCash(product.Price, ct);
+            await RemoveProductFromStock(normalizedCode, ct);
 
-        var updatedBalance = await FetchCurrentBalance(cancellationToken);
-        var updatedStock = await FetchCurrentStock(normalizedCode, cancellationToken);
+            var updatedBalance = await FetchCurrentBalance(ct);
+            var updatedStock = await FetchCurrentStock(normalizedCode, ct);
 
-        return new OrderReceipt(normalizedCode, product.Price, updatedBalance, updatedStock);
+            return new OrderReceipt(normalizedCode, product.Price, updatedBalance, updatedStock);
+        }, cancellationToken);
     }
 
     private async Task<Product> FetchProduct(string code, CancellationToken cancellationToken) =>

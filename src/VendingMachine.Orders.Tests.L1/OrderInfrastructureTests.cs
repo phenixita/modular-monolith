@@ -19,12 +19,11 @@ public sealed class OrderInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var dbName = $"vendingmachine_orders_{Guid.NewGuid():N}";
             var cashStorage = new PostgresCashStorage(fixture.PostgresConnectionString);
             cashStorage.EnsureCreated();
             cashStorage.SetBalance(5.00m);
 
-            var inventory = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
+            var inventory = new PostgresInventoryRepository(fixture.PostgresConnectionString);
             await inventory.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
             await inventory.SetStockAsync("COLA", 2);
 
@@ -40,7 +39,7 @@ public sealed class OrderInfrastructureTests
             var cashStorage2 = new PostgresCashStorage(fixture.PostgresConnectionString);
             Assert.Equal(3.50m, cashStorage2.GetBalance());
 
-            var inventory2 = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
+            var inventory2 = new PostgresInventoryRepository(fixture.PostgresConnectionString);
             Assert.Equal(1, await inventory2.GetQuantityAsync("COLA"));
         }
         finally
@@ -50,35 +49,32 @@ public sealed class OrderInfrastructureTests
     }
 
     [Fact]
-    public async Task PlaceOrderSaga_WhenStockUpdateFails_CompensatesCashAndKeepsInventoryUnchanged()
+    public async Task PlaceOrder_WhenStockUpdateFails_RollsBackCashAndKeepsInventoryUnchanged()
     {
         var fixture = new InfrastructureFixture();
         await fixture.InitializeAsync();
         try
         {
-            var dbName = $"vendingmachine_orders_{Guid.NewGuid():N}";
             var cashStorage = new PostgresCashStorage(fixture.PostgresConnectionString);
             cashStorage.EnsureCreated();
             cashStorage.SetBalance(5.00m);
 
-            var mongoRepository = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
-            await mongoRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-            await mongoRepository.SetStockAsync("COLA", 2);
-            var failingRepository = new FailingOnRemoveStockRepository(mongoRepository);
+            var baseRepository = new PostgresInventoryRepository(fixture.PostgresConnectionString);
+            await baseRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
+            await baseRepository.SetStockAsync("COLA", 2);
+            var failingRepository = new FailingOnRemoveStockRepository(baseRepository);
 
             var services = BuildServices(cashStorage, failingRepository);
             var mediator = services.GetRequiredService<IMediator>();
 
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await mediator.Send(new PlaceOrderSagaCommand("COLA"))
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await mediator.Send(new PlaceOrderCommand("COLA"))
             );
-
-            Assert.Contains("Charged cash has been refunded", exception.Message);
 
             var cashStorage2 = new PostgresCashStorage(fixture.PostgresConnectionString);
             Assert.Equal(5.00m, cashStorage2.GetBalance());
 
-            var inventory2 = new MongoInventoryRepository(fixture.MongoConnectionString, dbName);
+            var inventory2 = new PostgresInventoryRepository(fixture.PostgresConnectionString);
             Assert.Equal(2, await inventory2.GetQuantityAsync("COLA"));
         }
         finally
@@ -97,7 +93,10 @@ public sealed class OrderInfrastructureTests
             typeof(OrderService).Assembly,
             typeof(CashRegisterService).Assembly,
             typeof(InventoryService).Assembly);
+        services.AddSingleton<IOrdersUnitOfWork, TransactionScopeOrdersUnitOfWork>();
         services.AddSingleton<IOrderService, OrderService>();
+        services.AddSingleton<IInventoryService, InventoryService>();
+        services.AddSingleton<ICashRegisterService, CashRegisterService>();
         return services.BuildServiceProvider();
     }
 

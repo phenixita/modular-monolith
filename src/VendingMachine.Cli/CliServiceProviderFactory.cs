@@ -23,7 +23,7 @@ internal static class CliServiceProviderFactory
         });
 
         services.AddSingleton<IInventoryRepository>(
-            new MongoInventoryRepository(config.Mongo.ConnectionString, config.Mongo.Database));
+            new PostgresInventoryRepository(config.Postgres.ConnectionString));
         services.AddSingleton<ICashStorage>(new PostgresCashStorage(config.Postgres.ConnectionString));
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICashRegisterService, CashRegisterService>();

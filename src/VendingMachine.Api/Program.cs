@@ -19,7 +19,7 @@ builder.Services.AddOrdersModule();
 var infrastructureOptions = InfrastructureOptions.Load(builder.Configuration);
 
 builder.Services.AddSingleton<IInventoryRepository>(_ =>
-    new MongoInventoryRepository(infrastructureOptions.Mongo.ConnectionString, infrastructureOptions.Mongo.Database));
+    new PostgresInventoryRepository(infrastructureOptions.Postgres.ConnectionString));
 
 builder.Services.AddSingleton<ICashStorage>(_ =>
     new PostgresCashStorage(infrastructureOptions.Postgres.ConnectionString));
@@ -179,35 +179,19 @@ internal sealed record InsertCashRequest(decimal Amount);
 
 internal sealed record PlaceOrderRequest(string? Code);
 
-internal sealed record InfrastructureOptions(PostgresOptions Postgres, MongoOptions Mongo)
+internal sealed record InfrastructureOptions(PostgresOptions Postgres)
 {
     public static InfrastructureOptions Load(IConfiguration configuration)
     {
         var postgresConnection = configuration["postgres:connectionString"];
-        var mongoConnection = configuration["mongo:connectionString"];
-        var mongoDatabase = configuration["mongo:database"];
 
         if (string.IsNullOrWhiteSpace(postgresConnection))
         {
             throw new InvalidOperationException("Missing configuration value 'postgres.connectionString'.");
         }
 
-        if (string.IsNullOrWhiteSpace(mongoConnection))
-        {
-            throw new InvalidOperationException("Missing configuration value 'mongo.connectionString'.");
-        }
-
-        if (string.IsNullOrWhiteSpace(mongoDatabase))
-        {
-            throw new InvalidOperationException("Missing configuration value 'mongo.database'.");
-        }
-
-        return new InfrastructureOptions(
-            new PostgresOptions(postgresConnection),
-            new MongoOptions(mongoConnection, mongoDatabase));
+        return new InfrastructureOptions(new PostgresOptions(postgresConnection));
     }
 }
 
 internal sealed record PostgresOptions(string ConnectionString);
-
-internal sealed record MongoOptions(string ConnectionString, string Database);

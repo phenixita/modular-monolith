@@ -10,14 +10,14 @@ namespace VendingMachine.Inventory.Tests.L1;
 public sealed class InventoryInfrastructureTests
 {
     [Fact]
-    public async Task AddStock_PersistsDataInMongoDB()
+    public async Task AddStock_PersistsDataInPostgres()
     {
         // Arrange
         var fixture = new InfrastructureFixture();
         await fixture.InitializeAsync();
         try
         {
-            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository1 = new PostgresInventoryRepository(fixture.ConnectionString);
             var service1 = BuildInventoryService(repository1);
 
             // Create a product first
@@ -28,7 +28,7 @@ public sealed class InventoryInfrastructureTests
             await service1.AddStock("COLA", 5);
 
             // Assert - Verify persistence by reading from a new repository instance
-            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository2 = new PostgresInventoryRepository(fixture.ConnectionString);
             var quantity = await repository2.GetQuantityAsync("COLA");
             Assert.Equal(5, quantity);
 
@@ -37,7 +37,7 @@ public sealed class InventoryInfrastructureTests
             await service2.AddStock("COLA", 3);
 
             // Assert - Verify the total is correct
-            var repository3 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository3 = new PostgresInventoryRepository(fixture.ConnectionString);
             var finalQuantity = await repository3.GetQuantityAsync("COLA");
             Assert.Equal(8, finalQuantity);
         }
@@ -48,14 +48,14 @@ public sealed class InventoryInfrastructureTests
     }
 
     [Fact]
-    public async Task RemoveStock_PersistsDataInMongoDB()
+    public async Task RemoveStock_PersistsDataInPostgres()
     {
         // Arrange
         var fixture = new InfrastructureFixture();
         await fixture.InitializeAsync();
         try
         {
-            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository1 = new PostgresInventoryRepository(fixture.ConnectionString);
             var service1 = BuildInventoryService(repository1);
 
             // Create a product and set initial stock
@@ -67,7 +67,7 @@ public sealed class InventoryInfrastructureTests
             await service1.RemoveStock("WATER", 15);
 
             // Assert - Verify persistence by reading from a new repository instance
-            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository2 = new PostgresInventoryRepository(fixture.ConnectionString);
             var quantity = await repository2.GetQuantityAsync("WATER");
             Assert.Equal(5, quantity);
 
@@ -76,7 +76,7 @@ public sealed class InventoryInfrastructureTests
             await service2.RemoveStock("WATER", 5);
 
             // Assert - Verify the final quantity is zero
-            var repository3 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository3 = new PostgresInventoryRepository(fixture.ConnectionString);
             var finalQuantity = await repository3.GetQuantityAsync("WATER");
             Assert.Equal(0, finalQuantity);
         }
@@ -94,7 +94,7 @@ public sealed class InventoryInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository);
 
             // Create multiple products
@@ -108,7 +108,7 @@ public sealed class InventoryInfrastructureTests
             await service.AddStock("JUICE", 8);
 
             // Assert - Verify each product has correct stock
-            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository2 = new PostgresInventoryRepository(fixture.ConnectionString);
             Assert.Equal(10, await repository2.GetQuantityAsync("COLA"));
             Assert.Equal(15, await repository2.GetQuantityAsync("WATER"));
             Assert.Equal(8, await repository2.GetQuantityAsync("JUICE"));
@@ -127,7 +127,7 @@ public sealed class InventoryInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository);
 
             await service.CreateProduct(new Product("COLA", "Coca Cola", 1.50m));
@@ -152,7 +152,7 @@ public sealed class InventoryInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository);
 
             // Act & Assert - Try to add stock to a product that doesn't exist
@@ -174,7 +174,7 @@ public sealed class InventoryInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository);
 
             await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -188,14 +188,14 @@ public sealed class InventoryInfrastructureTests
     }
 
     [Fact]
-    public async Task CreateProduct_PersistsInMongoDB()
+    public async Task CreateProduct_PersistsInPostgres()
     {
         // Arrange
         var fixture = new InfrastructureFixture();
         await fixture.InitializeAsync();
         try
         {
-            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository1 = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository1);
             var product = new Product("COLA", "Coca Cola", 1.50m);
 
@@ -203,7 +203,7 @@ public sealed class InventoryInfrastructureTests
             await service.CreateProduct(product);
 
             // Assert
-            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository2 = new PostgresInventoryRepository(fixture.ConnectionString);
             var stored = await repository2.GetByCodeAsync("COLA");
             Assert.Equal(1.50m, stored.Price);
         }
@@ -214,14 +214,14 @@ public sealed class InventoryInfrastructureTests
     }
 
     [Fact]
-    public async Task UpdateProduct_PersistsPriceInMongoDB()
+    public async Task UpdateProduct_PersistsPriceInPostgres()
     {
         // Arrange
         var fixture = new InfrastructureFixture();
         await fixture.InitializeAsync();
         try
         {
-            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository1 = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository1);
             await service.CreateProduct(new Product("WATER", "Water", 1.00m));
 
@@ -229,7 +229,7 @@ public sealed class InventoryInfrastructureTests
             await service.UpdateProduct(new Product("WATER", "Water", 1.25m));
 
             // Assert
-            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository2 = new PostgresInventoryRepository(fixture.ConnectionString);
             var stored = await repository2.GetByCodeAsync("WATER");
             Assert.Equal(1.25m, stored.Price);
         }
@@ -240,14 +240,14 @@ public sealed class InventoryInfrastructureTests
     }
 
     [Fact]
-    public async Task DeleteProduct_WithZeroStock_RemovesProductInMongoDB()
+    public async Task DeleteProduct_WithZeroStock_RemovesProductInPostgres()
     {
         // Arrange
         var fixture = new InfrastructureFixture();
         await fixture.InitializeAsync();
         try
         {
-            var repository1 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository1 = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository1);
             await service.CreateProduct(new Product("JUICE", "Orange Juice", 2.00m));
             await service.SetStock("JUICE", 0);
@@ -256,7 +256,7 @@ public sealed class InventoryInfrastructureTests
             await service.DeleteProduct("JUICE");
 
             // Assert
-            var repository2 = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository2 = new PostgresInventoryRepository(fixture.ConnectionString);
             await Assert.ThrowsAsync<KeyNotFoundException>(
                 async () => await repository2.GetByCodeAsync("JUICE")
             );
@@ -275,7 +275,7 @@ public sealed class InventoryInfrastructureTests
         await fixture.InitializeAsync();
         try
         {
-            var repository = new MongoInventoryRepository(fixture.ConnectionString, "vendingmachine_inventory_test");
+            var repository = new PostgresInventoryRepository(fixture.ConnectionString);
             var service = BuildInventoryService(repository);
             await service.CreateProduct(new Product("TEA", "Tea", 0.80m));
             await service.SetStock("TEA", 2);
