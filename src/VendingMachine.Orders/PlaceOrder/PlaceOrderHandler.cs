@@ -19,8 +19,19 @@ internal sealed class PlaceOrderHandler(
         EnsureStockIsAvailable(normalizedCode, currentStock);
         EnsureBalanceIsSufficient(product.Price, currentBalance);
 
+        // Execute operations with compensating transaction pattern
         await ChargeCustomerCash(product.Price, cancellationToken);
-        await RemoveProductFromStock(normalizedCode, cancellationToken);
+        
+        try
+        {
+            await RemoveProductFromStock(normalizedCode, cancellationToken);
+        }
+        catch
+        {
+            // Compensate: refund the charged amount if inventory operation fails
+            await cashRegisterService.Insert(product.Price);
+            throw;
+        }
 
         var updatedBalance = await FetchCurrentBalance(cancellationToken);
         var updatedStock = await FetchCurrentStock(normalizedCode, cancellationToken);
