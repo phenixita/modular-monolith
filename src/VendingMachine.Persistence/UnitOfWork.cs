@@ -23,12 +23,16 @@ internal sealed class UnitOfWork : IUnitOfWork
 
     public Task CommitAsync(CancellationToken cancellationToken = default)
     {
+        // Note: IDbTransaction.Commit() is synchronous. CancellationToken parameter
+        // is included for API consistency and potential future async implementations.
         _transaction.Commit();
         return Task.CompletedTask;
     }
 
     public Task RollbackAsync(CancellationToken cancellationToken = default)
     {
+        // Note: IDbTransaction.Rollback() is synchronous. CancellationToken parameter
+        // is included for API consistency and potential future async implementations.
         _transaction.Rollback();
         return Task.CompletedTask;
     }
@@ -40,12 +44,10 @@ internal sealed class UnitOfWork : IUnitOfWork
             return;
         }
 
-        await Task.Run(() =>
-        {
-            _transaction?.Dispose();
-            _connection?.Dispose();
-        });
+        _transaction?.Dispose();
+        _connection?.Dispose();
 
         _disposed = true;
+        await Task.CompletedTask;
     }
 }

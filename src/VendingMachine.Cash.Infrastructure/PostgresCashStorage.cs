@@ -1,4 +1,5 @@
 using System.Data;
+using Npgsql;
 using VendingMachine.Persistence;
 
 namespace VendingMachine.Cash;
@@ -18,9 +19,8 @@ public sealed class PostgresCashStorage : ICashStorage
 
         using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT value FROM cash.cash_state WHERE property = 'balance';";
-        var result = await ExecuteScalarAsync(command, cancellationToken);
+        await using var command = new NpgsqlCommand("SELECT value FROM cash.cash_state WHERE property = 'balance';", (NpgsqlConnection)connection);
+        var result = await command.ExecuteScalarAsync(cancellationToken);
 
         return result is decimal value ? value : 0m;
     }
@@ -36,29 +36,23 @@ public sealed class PostgresCashStorage : ICashStorage
 
         using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
-        using var command = connection.CreateCommand();
-        command.CommandText =
+        await using var command = new NpgsqlCommand(
             """
             INSERT INTO cash.cash_state (property, value)
             VALUES ('balance', @balance)
             ON CONFLICT (property) DO UPDATE
             SET value = EXCLUDED.value;
-            """;
+            """, (NpgsqlConnection)connection);
         
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = "balance";
-        parameter.Value = balance;
-        command.Parameters.Add(parameter);
-        
-        await ExecuteNonQueryAsync(command, cancellationToken);
+        command.Parameters.AddWithValue("balance", balance);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task EnsureCreatedAsync(CancellationToken cancellationToken = default)
     {
         using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
 
-        using var command = connection.CreateCommand();
-        command.CommandText =
+        await using var command = new NpgsqlCommand(
             """
             CREATE SCHEMA IF NOT EXISTS cash;
             
@@ -70,17 +64,8 @@ public sealed class PostgresCashStorage : ICashStorage
             INSERT INTO cash.cash_state (property, value)
             VALUES ('balance', 0.00)
             ON CONFLICT (property) DO NOTHING;
-            """;
-        await ExecuteNonQueryAsync(command, cancellationToken);
-    }
-
-    private static Task<object?> ExecuteScalarAsync(IDbCommand command, CancellationToken cancellationToken)
-    {
-        return Task.Run(() => command.ExecuteScalar(), cancellationToken);
-    }
-
-    private static Task<int> ExecuteNonQueryAsync(IDbCommand command, CancellationToken cancellationToken)
-    {
-        return Task.Run(() => command.ExecuteNonQuery(), cancellationToken);
+            """, (NpgsqlConnection)connection);
+        
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }
