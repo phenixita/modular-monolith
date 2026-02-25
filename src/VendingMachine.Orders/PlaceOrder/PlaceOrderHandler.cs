@@ -9,6 +9,7 @@ namespace VendingMachine.Orders.PlaceOrder;
 internal sealed class PlaceOrderHandler(
     IInventoryService inventoryService,
     ICashRegisterService cashRegisterService,
+    IPublisher publisher,
     IUnitOfWork unitOfWork) : IRequestHandler<PlaceOrderCommand, OrderReceipt>
 {
     public async Task<OrderReceipt> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -25,6 +26,11 @@ internal sealed class PlaceOrderHandler(
 
             await ChargeCustomerCash(product.Price, ct);
             await RemoveProductFromStock(normalizedCode, ct);
+
+            await publisher.Publish(
+                new OrderConfirmed(normalizedCode, product.Price, DateTimeOffset.UtcNow),
+                ct
+            );
 
             var updatedBalance = await FetchCurrentBalance(ct);
             var updatedStock = await FetchCurrentStock(normalizedCode, ct);

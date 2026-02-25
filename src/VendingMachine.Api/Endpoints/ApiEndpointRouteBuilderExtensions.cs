@@ -8,6 +8,7 @@ internal static class ApiEndpointRouteBuilderExtensions
         api.MapInventoryEndpoints();
         api.MapCashEndpoints();
         api.MapOrderEndpoints();
+        api.MapReportingEndpoints();
 
         return endpointRouteBuilder;
     }

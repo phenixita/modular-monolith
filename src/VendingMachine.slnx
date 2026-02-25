@@ -19,6 +19,13 @@
     <Project Path="VendingMachine.Orders.Tests.L1/VendingMachine.Orders.Tests.L1.csproj" />
     <Project Path="VendingMachine.Orders/VendingMachine.Orders.csproj" />
   </Folder>
+  <Folder Name="/Reporting/">
+    <Project Path="VendingMachine.Reporting.Abstractions/VendingMachine.Reporting.Abstractions.csproj" />
+    <Project Path="VendingMachine.Reporting.Infrastructure/VendingMachine.Reporting.Infrastructure.csproj" />
+    <Project Path="VendingMachine.Reporting.Tests.L0/VendingMachine.Reporting.Tests.L0.csproj" />
+    <Project Path="VendingMachine.Reporting.Tests.L1/VendingMachine.Reporting.Tests.L1.csproj" />
+    <Project Path="VendingMachine.Reporting/VendingMachine.Reporting.csproj" />
+  </Folder>
   <Folder Name="/Api/">
     <Project Path="VendingMachine.Api/VendingMachine.Api.csproj" />
   </Folder>

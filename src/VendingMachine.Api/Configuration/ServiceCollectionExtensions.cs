@@ -3,6 +3,7 @@ using VendingMachine.Cash;
 using VendingMachine.Inventory;
 using VendingMachine.Orders;
 using VendingMachine.Persistence;
+using VendingMachine.Reporting;
 
 namespace VendingMachine.Api.Configuration;
 
@@ -29,6 +30,8 @@ internal static class ServiceCollectionExtensions
         services.AddCashRegisterModule();
 
         services.AddOrdersModule();
+
+        services.AddReportingModule();
 
         return services;
     }

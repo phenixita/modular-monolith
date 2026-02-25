@@ -37,5 +37,8 @@ Content-Type: application/json
   "code": "{{productCode}}"
 }
 
+### 6) Statistics (reporting dashboard)
+GET {{baseUrl}}/api/reporting/dashboard
+
 ### 6) Refund all (cash refund)
 POST {{baseUrl}}/api/cash/refund

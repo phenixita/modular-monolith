@@ -20,6 +20,8 @@ internal sealed record RefundResponse(decimal RefundedAmount, decimal Balance);
 
 internal sealed record PlaceOrderResponse(string ProductCode, decimal Price, decimal Balance, int Stock);
 
+internal sealed record DashboardStatsResponse(decimal TotaleOrdiniEuro, int TotaleNumeroOrdini, decimal MediaEuroOrdini);
+
 internal sealed record CreateProductRequest(string? Code, decimal Price);
 
 internal sealed record LoadStockRequest(int Quantity);
