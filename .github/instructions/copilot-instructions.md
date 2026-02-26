@@ -36,6 +36,9 @@ Example: business logic, parameter validation, etc. should be testable with in-m
 
 Move to L1 test to verify database interactions, tipycally database query, file system access, network calls, etc.
 
+Write test method names based on Given-When-Then pattern.
+Example: `Given_ValidInput_When_CallingMethod_Then_ReturnsExpectedResult`
+
 ## Developer flow
 
 1. NON NEGOTIABLE: Test driven development.
