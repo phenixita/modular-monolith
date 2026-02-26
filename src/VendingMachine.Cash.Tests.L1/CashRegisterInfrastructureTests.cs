@@ -18,7 +18,7 @@ public sealed class PostgresCashRepositoryTests : IClassFixture<InfrastructureFi
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task EnsureCreatedAsync_CreatesSchemaAndTable()
+    public async Task GivenNewRepository_WhenEnsureCreatedAsync_ThenCreatesSchemaAndInitializesToZero()
     {
         // Arrange
         var repository = CreateRepository();
@@ -32,7 +32,7 @@ public sealed class PostgresCashRepositoryTests : IClassFixture<InfrastructureFi
     }
 
     [Fact]
-    public async Task GetBalanceAsync_ReturnsZero_WhenNoBalanceSet()
+    public async Task GivenRepositoryCreated_WhenGetBalance_ThenReturnsZero()
     {
         // Arrange
         var repository = CreateRepository();
@@ -46,7 +46,7 @@ public sealed class PostgresCashRepositoryTests : IClassFixture<InfrastructureFi
     }
 
     [Fact]
-    public async Task SetBalanceAsync_PersistsBalance()
+    public async Task GivenRepositoryCreated_WhenSetBalance_ThenPersistsBalance()
     {
         // Arrange
         var repository = CreateRepository();
@@ -61,7 +61,7 @@ public sealed class PostgresCashRepositoryTests : IClassFixture<InfrastructureFi
     }
 
     [Fact]
-    public async Task SetBalanceAsync_UpdatesExistingBalance()
+    public async Task GivenRepositoryWithExistingBalance_WhenSetNewBalance_ThenUpdatesBalance()
     {
         // Arrange
         var repository = CreateRepository();
@@ -77,7 +77,7 @@ public sealed class PostgresCashRepositoryTests : IClassFixture<InfrastructureFi
     }
 
     [Fact]
-    public async Task SetBalanceAsync_ThrowsArgumentOutOfRangeException_WhenBalanceIsNegative()
+    public async Task GivenRepositoryCreated_WhenSetNegativeBalance_ThenThrowsArgumentOutOfRangeException()
     {
         // Arrange
         var repository = CreateRepository();
