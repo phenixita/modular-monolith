@@ -17,21 +17,11 @@ namespace VendingMachine.Cash
             .AddScoped<ICashRegisterService, CashRegisterService>()
             .AddMediatR(typeof(CashRegisterService).Assembly);
 
-        public static IServiceCollection AddCashRegisterModuleForTesting(
-            this IServiceCollection services,
-            ICashRepository repository) =>
-            services.AddSingleton(repository)
+        public static IServiceCollection AddCashRegisterModuleForTests(
+            this IServiceCollection services) =>
+            services.AddSingleton<ICashRepository, InMemoryCashrepository>()
             .AddSingleton<IUnitOfWork, NoOpUnitOfWork>()
             .AddScoped<ICashRegisterService, CashRegisterService>()
             .AddMediatR(typeof(CashRegisterService).Assembly);
-
-        private sealed class NoOpUnitOfWork : IUnitOfWork
-        {
-            public Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default) =>
-                action(cancellationToken);
-
-            public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default) =>
-                action(cancellationToken);
-        }
     }
 }

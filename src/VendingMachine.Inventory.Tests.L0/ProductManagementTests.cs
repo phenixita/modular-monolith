@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Inventory.Infrastructure;
 using Xunit;
 
 namespace VendingMachine.Inventory.Tests.L0;
@@ -11,8 +10,7 @@ public sealed class ProductManagementTests
     public async Task CreateProduct_WithValidPrice_CreatesProduct()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         var product = new Product("COLA", "Coca Cola", 1.50m);
 
         // Act
@@ -27,8 +25,7 @@ public sealed class ProductManagementTests
     public async Task CreateProduct_WithNegativePrice_ThrowsException()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, _) = BuildInventoryService();
         var product = new Product("COLA", "Coca Cola", -1.00m);
 
         // Act & Assert
@@ -41,8 +38,7 @@ public sealed class ProductManagementTests
     public async Task UpdateProduct_WithValidPrice_UpdatesProduct()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         await service.CreateProduct(new Product("WATER", "Water", 1.00m));
 
         // Act
@@ -57,8 +53,7 @@ public sealed class ProductManagementTests
     public async Task UpdateProduct_WithNegativePrice_ThrowsExceptionAndKeepsPrice()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         await service.CreateProduct(new Product("JUICE", "Orange Juice", 2.00m));
 
         // Act & Assert
@@ -74,8 +69,7 @@ public sealed class ProductManagementTests
     public async Task ReadProduct_ReturnsProduct()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, _) = BuildInventoryService();
         await service.CreateProduct(new Product("COLA", "Coca Cola", 1.50m));
 
         // Act
@@ -90,8 +84,7 @@ public sealed class ProductManagementTests
     public async Task ReadProduct_WithUnknownProduct_ThrowsException()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, _) = BuildInventoryService();
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -103,8 +96,7 @@ public sealed class ProductManagementTests
     public async Task DeleteProduct_WithZeroStock_RemovesProduct()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         await service.CreateProduct(new Product("COLA", "Coca Cola", 1.50m));
         await repository.SetStockAsync("COLA", 0);
 
@@ -121,8 +113,7 @@ public sealed class ProductManagementTests
     public async Task DeleteProduct_WithStock_ThrowsExceptionAndKeepsProduct()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         await service.CreateProduct(new Product("WATER", "Water", 1.00m));
         await repository.SetStockAsync("WATER", 3);
 
@@ -135,11 +126,16 @@ public sealed class ProductManagementTests
         Assert.Equal("WATER", stored.Code);
     }
 
-    private static IInventoryService BuildInventoryService(IInventoryRepository repository)
+    private static (IInventoryService Service, IInventoryRepository Repository) BuildInventoryService()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddInventoryModuleForTesting(repository);
-        return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
+        services.AddInventoryModuleForTests();
+
+        var serviceProvider = services.BuildServiceProvider();
+        return (
+            serviceProvider.GetRequiredService<IInventoryService>(),
+            serviceProvider.GetRequiredService<IInventoryRepository>()
+        );
     }
 }

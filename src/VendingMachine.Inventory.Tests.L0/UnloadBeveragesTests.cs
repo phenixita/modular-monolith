@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using VendingMachine.Inventory.Infrastructure;
 using Xunit;
 
 namespace VendingMachine.Inventory.Tests.L0;
@@ -14,8 +13,7 @@ public sealed class UnloadBeveragesTests
     public async Task UnloadBeverages_DecreasesStock(string productCode, int initialStock, int quantity, int expectedStock)
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
 
         // Setup initial product and stock
         await repository.AddOrUpdateAsync(new Product(productCode, $"{productCode} Name", 1.50m));
@@ -33,8 +31,7 @@ public sealed class UnloadBeveragesTests
     public async Task UnloadBeverages_WithInsufficientStock_ThrowsException()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         await repository.AddOrUpdateAsync(new Product("COLA", "Cola", 1.50m));
         await repository.SetStockAsync("COLA", 3);
 
@@ -48,8 +45,7 @@ public sealed class UnloadBeveragesTests
     public async Task UnloadBeverages_WithZeroQuantity_ThrowsException()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         await repository.AddOrUpdateAsync(new Product("COLA", "Cola", 1.50m));
         await repository.SetStockAsync("COLA", 10);
 
@@ -63,8 +59,7 @@ public sealed class UnloadBeveragesTests
     public async Task UnloadBeverages_WithNegativeQuantity_ThrowsException()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, repository) = BuildInventoryService();
         await repository.AddOrUpdateAsync(new Product("COLA", "Cola", 1.50m));
         await repository.SetStockAsync("COLA", 10);
 
@@ -78,8 +73,7 @@ public sealed class UnloadBeveragesTests
     public async Task UnloadBeverages_WithUnknownProduct_ThrowsException()
     {
         // Arrange
-        var repository = new InMemoryInventoryRepository();
-        var service = BuildInventoryService(repository);
+        var (service, _) = BuildInventoryService();
 
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -87,11 +81,16 @@ public sealed class UnloadBeveragesTests
         );
     }
 
-    private static IInventoryService BuildInventoryService(IInventoryRepository repository)
+    private static (IInventoryService Service, IInventoryRepository Repository) BuildInventoryService()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddInventoryModuleForTesting(repository);
-        return services.BuildServiceProvider().GetRequiredService<IInventoryService>();
+        services.AddInventoryModuleForTests();
+
+        var serviceProvider = services.BuildServiceProvider();
+        return (
+            serviceProvider.GetRequiredService<IInventoryService>(),
+            serviceProvider.GetRequiredService<IInventoryRepository>()
+        );
     }
 }

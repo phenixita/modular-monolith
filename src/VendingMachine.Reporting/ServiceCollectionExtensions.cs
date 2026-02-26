@@ -20,20 +20,11 @@ namespace VendingMachine.Reporting
                 .AddScoped<IReportingService, ReportingService>()
                 .AddMediatR(typeof(ReportingService).Assembly);
 
-        public static IServiceCollection AddReportingModuleForTesting(this IServiceCollection services) =>
+        public static IServiceCollection AddReportingModuleForTests(this IServiceCollection services) =>
             services
                 .AddSingleton<IReportingRepository, InMemoryReportingRepository>()
                 .AddSingleton<IUnitOfWork, NoOpUnitOfWork>()
                 .AddScoped<IReportingService, ReportingService>()
                 .AddMediatR(typeof(ReportingService).Assembly);
-
-        private sealed class NoOpUnitOfWork : IUnitOfWork
-        {
-            public Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default) =>
-                action(cancellationToken);
-
-            public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default) =>
-                action(cancellationToken);
-        }
     }
 }

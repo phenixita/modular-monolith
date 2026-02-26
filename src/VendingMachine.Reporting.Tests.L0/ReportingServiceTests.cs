@@ -14,7 +14,7 @@ public sealed class ReportingServiceTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddReportingModuleForTesting();
+        services.AddReportingModuleForTests();
         var provider = services.BuildServiceProvider();
 
         // Pre-populate in-memory repository with test data
@@ -35,7 +35,7 @@ public sealed class ReportingServiceTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddReportingModuleForTesting();
+        services.AddReportingModuleForTests();
         var provider = services.BuildServiceProvider();
 
         var publisher = provider.GetRequiredService<IPublisher>();
@@ -46,7 +46,7 @@ public sealed class ReportingServiceTests
         // Verify order was recorded by querying repository
         var repository = provider.GetRequiredService<IReportingRepository>();
         var stats = await repository.GetDashboardStatsAsync();
-        
+
         Assert.Equal(1.50m, stats.TotalRevenue);
         Assert.Equal(1, stats.OrderCount);
         Assert.Equal(1.50m, stats.AverageOrderValue);

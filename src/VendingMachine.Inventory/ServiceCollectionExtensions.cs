@@ -19,11 +19,10 @@ namespace VendingMachine.Inventory
          .AddScoped<IInventoryService, InventoryService>()
          .AddMediatR(typeof(InventoryService).Assembly);
 
-        public static IServiceCollection AddInventoryModuleForTesting(
-            this IServiceCollection services,
-            IInventoryRepository repository) =>
+        public static IServiceCollection AddInventoryModuleForTests(
+            this IServiceCollection services) =>
             services
-            .AddSingleton(repository)
+            .AddSingleton<IInventoryRepository, InMemoryInventoryRepository>()
             .AddScoped<IInventoryService, InventoryService>()
             .AddMediatR(typeof(InventoryService).Assembly);
 

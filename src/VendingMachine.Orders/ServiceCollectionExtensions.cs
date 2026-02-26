@@ -10,20 +10,10 @@ namespace VendingMachine.Orders
         => services.AddScoped<IOrderService, OrderService>()
         .AddMediatR(typeof(OrderService).Assembly);
 
-        public static IServiceCollection AddOrdersModuleForTesting(this IServiceCollection services)
+        public static IServiceCollection AddOrdersModuleForTests(this IServiceCollection services)
         => services.AddSingleton<IUnitOfWork, NoOpUnitOfWork>()
         .AddScoped<IOrderService, OrderService>()
         .AddMediatR(typeof(OrderService).Assembly);
-
-        private sealed class NoOpUnitOfWork : IUnitOfWork
-        {
-            public Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default) =>
-                action(cancellationToken);
-
-            public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default) =>
-                action(cancellationToken);
-        }
-
 
     }
 }
