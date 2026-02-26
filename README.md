@@ -11,61 +11,36 @@ Questo repository adotta una filosofia di montaggio moduli dove l'host applicati
 
 Ridurre la conoscenza infrastrutturale nell'host e mantenere i moduli indipendenti dal tipo di esecuzione.
 
-## Diagramma Mermaid
+## Diagramma Mermaid (Produzione)
 
 ```mermaid
-flowchart LR
-    subgraph ENV[Execution Environment]
-        VARS[Environment Variables\npostgres.connectionString]
-        PURPOSE{Execution Purpose}
-    end
+flowchart TD
+    ENV[Environment Variables\npostgres.connectionString] --> API[Host: VendingMachine.Api\nProgram / Composition Root]
 
-    subgraph HOST[Host Application]
-        BOOT[Program / Composition Root]
-    end
+    API --> CASH[AddCashRegisterModule]
+    API --> INV[AddInventoryModule]
+    API --> ORD[AddOrdersModule]
+    API --> REP[AddReportingModule]
 
-    subgraph MODS[Business Modules]
-        CASH[Cash Module\nAddCashRegisterModule\nAddCashRegisterModuleForTests]
-        INV[Inventory Module\nAddInventoryModule\nAddInventoryModuleForTests]
-        ORD[Orders Module\nAddOrdersModule\nAddOrdersModuleForTests]
-        REP[Reporting Module\nAddReportingModule\nAddReportingModuleForTests]
-    end
+    CASH --> READY[Moduli pronti in produzione]
+    INV --> READY
+    ORD --> READY
+    REP --> READY
+```
 
-    subgraph IMPL[Infrastructure Wiring Hidden Inside Modules]
-        PG[Postgres Repositories]
-        MEM[InMemory Repositories]
-        UOW[IUnitOfWork\nPostgresUnitOfWork / NoOpUnitOfWork]
-    end
+## Diagramma Mermaid (Test L0)
 
-    VARS --> BOOT
-    PURPOSE --> BOOT
-
-    BOOT --> CASH
-    BOOT --> INV
-    BOOT --> ORD
-    BOOT --> REP
-
-    PURPOSE -->|Production| PG
-    PURPOSE -->|Tests| MEM
-
-    CASH --> PG
-    CASH --> MEM
-    INV --> PG
-    INV --> MEM
-    REP --> PG
-    REP --> MEM
-    ORD --> UOW
-
-    PG --> UOW
-    MEM --> UOW
+```mermaid
+flowchart TD
+    TESTHOST[Host Runtime Test L0\nTest Project / ServiceCollection] --> MOD[Modulo sotto test\nAddXxxModuleForTests]
+    MOD --> L0READY[Test L0 pronti con wiring in-memory]
 ```
 
 ## Come leggere il diagramma
 
-- l'host non costruisce manualmente repository e servizi di dominio
-- l'host chiama solo AddXxxModule (produzione) oppure AddXxxModuleForTests (test)
-- i moduli registrano internamente dipendenze coerenti con lo scenario
-- la source of truth runtime resta la configurazione ambiente
+- l'host API legge la configurazione dall'ambiente
+- l'host monta ogni modulo chiamando solo il metodo di produzione
+- il risultato è un'app pronta, con moduli caricati e indipendenti dall'host
 
 ## Esempio pratico
 
