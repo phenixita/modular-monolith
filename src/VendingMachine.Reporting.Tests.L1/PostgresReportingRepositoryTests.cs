@@ -25,9 +25,9 @@ public sealed class PostgresReportingRepositoryTests : IClassFixture<Infrastruct
 
         var stats = await repository.GetDashboardStatsAsync();
 
-        Assert.Equal(0m, stats.TotaleOrdiniEuro);
-        Assert.Equal(0, stats.TotaleNumeroOrdini);
-        Assert.Equal(0m, stats.MediaEuroOrdini);
+        Assert.Equal(0m, stats.TotalRevenue);
+        Assert.Equal(0, stats.OrderCount);
+        Assert.Equal(0m, stats.AverageOrderValue);
     }
 
     [Fact]
@@ -41,9 +41,9 @@ public sealed class PostgresReportingRepositoryTests : IClassFixture<Infrastruct
 
         var stats = await repository.GetDashboardStatsAsync();
 
-        Assert.Equal(6.00m, stats.TotaleOrdiniEuro);
-        Assert.Equal(3, stats.TotaleNumeroOrdini);
-        Assert.Equal(2.00m, stats.MediaEuroOrdini);
+        Assert.Equal(6.00m, stats.TotalRevenue);
+        Assert.Equal(3, stats.OrderCount);
+        Assert.Equal(2.00m, stats.AverageOrderValue);
     }
 
     private PostgresReportingRepository BuildRepository() =>

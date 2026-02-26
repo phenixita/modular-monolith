@@ -43,16 +43,16 @@ public sealed class CashRegisterTests
 
     private static ICashRegisterService BuildCashRegisterService(decimal initialBalance = 0)
     {
-        var storage = new InMemoryCashStorage();
-        storage.SetBalanceAsync(initialBalance).GetAwaiter().GetResult();
-        return BuildCashRegister(storage);
+        var repository = new InMemoryCashrepository();
+        repository.SetBalanceAsync(initialBalance).GetAwaiter().GetResult();
+        return BuildCashRegister(repository);
     }
 
-    private static ICashRegisterService BuildCashRegister(ICashStorage storage)
+    private static ICashRegisterService BuildCashRegister(ICashRepository repository)
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddCashRegisterModuleForTesting(storage);
+        services.AddCashRegisterModuleForTesting(repository);
         return services.BuildServiceProvider().GetRequiredService<ICashRegisterService>();
     }
 }

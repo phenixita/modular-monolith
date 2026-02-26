@@ -1,6 +1,6 @@
 namespace VendingMachine.Cash;
 
-public sealed class InMemoryCashStorage : ICashStorage
+public sealed class InMemoryCashrepository : ICashRepository
 {
     private decimal _balance;
 
@@ -20,7 +20,7 @@ public sealed class InMemoryCashStorage : ICashStorage
 
     public Task EnsureCreatedAsync(CancellationToken cancellationToken = default)
     {
-        // No-op for in-memory storage.
+        // No-op for in-memory repository.
         return Task.CompletedTask;
     }
 }

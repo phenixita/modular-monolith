@@ -28,7 +28,7 @@ namespace VendingMachine.Inventory
             .AddMediatR(typeof(InventoryService).Assembly);
 
 
-        // public static IServiceCollection WithPostgreStorage(this IServiceCollection services, string connectionString) =>
+        // public static IServiceCollection WithPostgrerepository(this IServiceCollection services, string connectionString) =>
         //    services.AddScoped<IInventoryRepository>(sp =>
         //             new PostgresInventoryRepository(
         //                 connectionString,

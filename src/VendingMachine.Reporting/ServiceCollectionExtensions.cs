@@ -22,15 +22,7 @@ namespace VendingMachine.Reporting
 
         public static IServiceCollection AddReportingModuleForTesting(this IServiceCollection services) =>
             services
-                .AddSingleton<IUnitOfWork, NoOpUnitOfWork>()
-                .AddScoped<IReportingService, ReportingService>()
-                .AddMediatR(typeof(ReportingService).Assembly);
-
-        public static IServiceCollection AddReportingModuleForTesting(
-            this IServiceCollection services,
-            IReportingRepository repository) =>
-            services
-                .AddSingleton(repository)
+                .AddSingleton<IReportingRepository, InMemoryReportingRepository>()
                 .AddSingleton<IUnitOfWork, NoOpUnitOfWork>()
                 .AddScoped<IReportingService, ReportingService>()
                 .AddMediatR(typeof(ReportingService).Assembly);

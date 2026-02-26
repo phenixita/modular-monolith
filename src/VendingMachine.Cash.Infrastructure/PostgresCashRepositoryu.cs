@@ -3,13 +3,13 @@ using VendingMachine.Persistence;
 
 namespace VendingMachine.Cash;
 
-public sealed class PostgresCashStorage : ICashStorage
+public sealed class PostgresCashRepository : ICashRepository
 {
     private readonly string _connectionString;
     private readonly ITransactionContext _transactionAccessor;
     private static readonly ITransactionContext NoTransactionAccessor = new NullTransactionContext();
 
-    public PostgresCashStorage(string connectionString, ITransactionContext? transactionAccessor = null)
+    public PostgresCashRepository(string connectionString, ITransactionContext? transactionAccessor = null)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
         {

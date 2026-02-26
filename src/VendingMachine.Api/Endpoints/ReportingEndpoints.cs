@@ -18,9 +18,9 @@ internal static class ReportingEndpoints
     {
         var stats = await reportingService.GetDashboardStatsAsync(cancellationToken);
         var data = new DashboardStatsResponse(
-            stats.TotaleOrdiniEuro,
-            stats.TotaleNumeroOrdini,
-            stats.MediaEuroOrdini);
+            stats.TotalRevenue,
+            stats.OrderCount,
+            stats.AverageOrderValue);
 
         return Results.Ok(ApiEnvelope.Success(data));
     }

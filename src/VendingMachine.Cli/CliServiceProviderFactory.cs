@@ -27,8 +27,8 @@ internal static class CliServiceProviderFactory
             new PostgresInventoryRepository(
                 config.Postgres.ConnectionString,
                 sp.GetRequiredService<ITransactionContext>()));
-        services.AddSingleton<ICashStorage>(sp =>
-            new PostgresCashStorage(
+        services.AddSingleton<ICashRepository>(sp =>
+            new PostgresCashRepository(
                 config.Postgres.ConnectionString,
                 sp.GetRequiredService<ITransactionContext>()));
         services.AddScoped<IInventoryService, InventoryService>();

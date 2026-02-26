@@ -8,19 +8,19 @@ namespace VendingMachine.Cash
     public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddCashRegisterModule(this IServiceCollection services) =>
-            services.AddScoped<ICashStorage, PostgresCashStorage>(sp =>
+            services.AddScoped<ICashRepository, PostgresCashRepository>(sp =>
             {
                 var options = sp.GetRequiredService<IOptions<InfrastructureOptions>>();
                 var connectionString = options.Value.ConnectionString;
-                return new PostgresCashStorage(connectionString, sp.GetRequiredService<ITransactionContext>());
+                return new PostgresCashRepository(connectionString, sp.GetRequiredService<ITransactionContext>());
             })
             .AddScoped<ICashRegisterService, CashRegisterService>()
             .AddMediatR(typeof(CashRegisterService).Assembly);
 
         public static IServiceCollection AddCashRegisterModuleForTesting(
             this IServiceCollection services,
-            ICashStorage storage) =>
-            services.AddSingleton(storage)
+            ICashRepository repository) =>
+            services.AddSingleton(repository)
             .AddSingleton<IUnitOfWork, NoOpUnitOfWork>()
             .AddScoped<ICashRegisterService, CashRegisterService>()
             .AddMediatR(typeof(CashRegisterService).Assembly);

@@ -20,32 +20,32 @@ public sealed class CashRegisterInfrastructureTests : IClassFixture<Infrastructu
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task CashRegister_PersistsBalanceAcrossInstances_WithPostgresStorage()
+    public async Task CashRegister_PersistsBalanceAcrossInstances_WithPostgresrepository()
     {
-        var storage1 = new PostgresCashStorage(_fixture.ConnectionString, new NullTransactionContext());
-        await storage1.EnsureCreatedAsync();
-        await storage1.SetBalanceAsync(0m);
+        var repository1 = new PostgresCashRepository(_fixture.ConnectionString, new NullTransactionContext());
+        await repository1.EnsureCreatedAsync();
+        await repository1.SetBalanceAsync(0m);
 
-        var register1 = BuildRegister(storage1);
+        var register1 = BuildRegister(repository1);
         await register1.Insert(2.00m);
         await register1.Charge(1.25m);
 
         Assert.Equal(0.75m, await register1.GetBalance());
 
-        var register2 = BuildRegister(new PostgresCashStorage(_fixture.ConnectionString, new NullTransactionContext()));
+        var register2 = BuildRegister(new PostgresCashRepository(_fixture.ConnectionString, new NullTransactionContext()));
         Assert.Equal(0.75m, await register2.GetBalance());
 
         var refunded = await register2.RefundAll();
         Assert.Equal(0.75m, refunded);
 
-        var register3 = BuildRegister(new PostgresCashStorage(_fixture.ConnectionString, new NullTransactionContext()));
+        var register3 = BuildRegister(new PostgresCashRepository(_fixture.ConnectionString, new NullTransactionContext()));
         Assert.Equal(0m, await register3.GetBalance());
     }
 
-    private static CashRegisterService BuildRegister(ICashStorage storage)
+    private static CashRegisterService BuildRegister(ICashRepository repository)
     {
         var services = new ServiceCollection();
-        services.AddSingleton(storage);
+        services.AddSingleton(repository);
         services.AddSingleton<IUnitOfWork, NoOpUnitOfWork>();
         services.AddLogging();
         services.AddMediatR(typeof(CashRegisterService).Assembly);

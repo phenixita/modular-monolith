@@ -2,9 +2,9 @@ using MediatR;
 
 namespace VendingMachine.Cash.GetBalance;
 
-internal sealed class GetBalanceHandler(ICashStorage storage)
+internal sealed class GetBalanceHandler(ICashRepository repository)
     : IRequestHandler<GetBalanceQuery, decimal>
 {
     public Task<decimal> Handle(GetBalanceQuery request, CancellationToken cancellationToken) =>
-        storage.GetBalanceAsync(cancellationToken);
+        repository.GetBalanceAsync(cancellationToken);
 }

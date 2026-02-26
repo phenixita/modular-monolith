@@ -2,7 +2,7 @@ using MediatR;
 
 namespace VendingMachine.Cash.InsertCache;
 
-internal sealed class InsertCashHandler(ICashStorage storage) : IRequestHandler<InsertCashCommand, Unit>
+internal sealed class InsertCashHandler(ICashRepository repository) : IRequestHandler<InsertCashCommand, Unit>
 {
     public async Task<Unit> Handle(InsertCashCommand request, CancellationToken cancellationToken)
     {
@@ -21,8 +21,8 @@ internal sealed class InsertCashHandler(ICashStorage storage) : IRequestHandler<
     }
 
     private async Task<decimal> CalculateUpdatedBalance(decimal amount, CancellationToken cancellationToken) =>
-        await storage.GetBalanceAsync(cancellationToken) + amount;
+        await repository.GetBalanceAsync(cancellationToken) + amount;
 
     private Task PersistUpdatedBalance(decimal balance, CancellationToken cancellationToken) =>
-        storage.SetBalanceAsync(balance, cancellationToken);
+        repository.SetBalanceAsync(balance, cancellationToken);
 }

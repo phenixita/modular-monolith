@@ -26,11 +26,11 @@ public sealed class OrderInfrastructureTests : IClassFixture<InfrastructureFixtu
     [Fact]
     public async Task PlaceOrder_PersistsCashAndInventory()
     {
-        var cashStorage = new PostgresCashStorage(
+        var cashrepository = new PostgresCashRepository(
             _fixture.PostgresConnectionString,
             new NullTransactionContext());
-        await cashStorage.EnsureCreatedAsync();
-        await cashStorage.SetBalanceAsync(5.00m);
+        await cashrepository.EnsureCreatedAsync();
+        await cashrepository.SetBalanceAsync(5.00m);
 
         var inventory = new PostgresInventoryRepository(
             _fixture.PostgresConnectionString,
@@ -47,10 +47,10 @@ public sealed class OrderInfrastructureTests : IClassFixture<InfrastructureFixtu
         Assert.Equal(3.50m, receipt.Balance);
         Assert.Equal(1, receipt.Stock);
 
-        var cashStorage2 = new PostgresCashStorage(
+        var cashrepository2 = new PostgresCashRepository(
             _fixture.PostgresConnectionString,
             new NullTransactionContext());
-        Assert.Equal(3.50m, await cashStorage2.GetBalanceAsync());
+        Assert.Equal(3.50m, await cashrepository2.GetBalanceAsync());
 
         var inventory2 = new PostgresInventoryRepository(
             _fixture.PostgresConnectionString,
@@ -61,11 +61,11 @@ public sealed class OrderInfrastructureTests : IClassFixture<InfrastructureFixtu
     [Fact]
     public async Task PlaceOrder_WhenStockUpdateFails_RollsBackCashAndKeepsInventoryUnchanged()
     {
-        var cashStorage = new PostgresCashStorage(
+        var cashrepository = new PostgresCashRepository(
             _fixture.PostgresConnectionString,
             new NullTransactionContext());
-        await cashStorage.EnsureCreatedAsync();
-        await cashStorage.SetBalanceAsync(5.00m);
+        await cashrepository.EnsureCreatedAsync();
+        await cashrepository.SetBalanceAsync(5.00m);
 
         var baseRepository = new PostgresInventoryRepository(
             _fixture.PostgresConnectionString,
@@ -79,10 +79,10 @@ public sealed class OrderInfrastructureTests : IClassFixture<InfrastructureFixtu
             async () => await mediator.Send(new PlaceOrderCommand("COLA"))
         );
 
-        var cashStorage2 = new PostgresCashStorage(
+        var cashrepository2 = new PostgresCashRepository(
             _fixture.PostgresConnectionString,
             new NullTransactionContext());
-        Assert.Equal(5.00m, await cashStorage2.GetBalanceAsync());
+        Assert.Equal(5.00m, await cashrepository2.GetBalanceAsync());
 
         var inventory2 = new PostgresInventoryRepository(
             _fixture.PostgresConnectionString,
@@ -93,8 +93,8 @@ public sealed class OrderInfrastructureTests : IClassFixture<InfrastructureFixtu
     private static ServiceProvider BuildServices(string connectionString, bool failOnRemoveStock)
     {
         var services = new ServiceCollection();
-        services.AddSingleton<ICashStorage>(sp =>
-            new PostgresCashStorage(
+        services.AddSingleton<ICashRepository>(sp =>
+            new PostgresCashRepository(
                 connectionString,
                 sp.GetRequiredService<ITransactionContext>()));
         services.AddSingleton<IInventoryRepository>(sp =>

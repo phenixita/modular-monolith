@@ -2,12 +2,12 @@ using MediatR;
 
 namespace VendingMachine.Cash.Charge;
 
-internal sealed class ChargeCashHandler(ICashStorage storage) : IRequestHandler<ChargeCashCommand, Unit>
+internal sealed class ChargeCashHandler(ICashRepository repository) : IRequestHandler<ChargeCashCommand, Unit>
 {
     public async Task<Unit> Handle(ChargeCashCommand request, CancellationToken cancellationToken)
     {
         ValidateAmountIsPositive(request.Amount);
-        var balance = await storage.GetBalanceAsync(cancellationToken);
+        var balance = await repository.GetBalanceAsync(cancellationToken);
         EnsureBalanceIsSufficient(balance, request.Amount);
         await DeductAmountFromBalance(balance, request.Amount, cancellationToken);
         return Unit.Value;
@@ -30,5 +30,5 @@ internal sealed class ChargeCashHandler(ICashStorage storage) : IRequestHandler<
     }
 
     private Task DeductAmountFromBalance(decimal balance, decimal amount, CancellationToken cancellationToken) =>
-        storage.SetBalanceAsync(balance - amount, cancellationToken);
+        repository.SetBalanceAsync(balance - amount, cancellationToken);
 }

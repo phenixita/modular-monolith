@@ -1,6 +1,6 @@
 namespace VendingMachine.Cash;
 
-public interface ICashStorage
+public interface ICashRepository
 {
     Task<decimal> GetBalanceAsync(CancellationToken cancellationToken = default);
 

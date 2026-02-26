@@ -13,14 +13,14 @@ public sealed class OrderPlacementTests
     [Fact]
     public async Task PlaceOrder_WithStockAndBalance_ReturnsReceiptAndUpdatesState()
     {
-        var storage = new InMemoryCashStorage();
-        await storage.SetBalanceAsync(5.00m);
+        var cashRepository = new InMemoryCashrepository();
+        await cashRepository.SetBalanceAsync(5.00m);
 
-        var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-        await repository.SetStockAsync("COLA", 2);
+        var inventoryRepository = new InMemoryInventoryRepository();
+        await inventoryRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
+        await inventoryRepository.SetStockAsync("COLA", 2);
 
-        var services = BuildServices(storage, repository);
+        var services = BuildServices(cashRepository, inventoryRepository);
         var orderService = services.GetRequiredService<IOrderService>();
 
         var receipt = await orderService.PlaceOrder("cola");
@@ -29,20 +29,20 @@ public sealed class OrderPlacementTests
         Assert.Equal(1.50m, receipt.Price);
         Assert.Equal(3.50m, receipt.Balance);
         Assert.Equal(1, receipt.Stock);
-        Assert.Equal(3.50m, await storage.GetBalanceAsync());
-        Assert.Equal(1, await repository.GetQuantityAsync("COLA"));
+        Assert.Equal(3.50m, await cashRepository.GetBalanceAsync());
+        Assert.Equal(1, await inventoryRepository.GetQuantityAsync("COLA"));
     }
 
     [Fact]
     public async Task PlaceOrder_WithInsufficientBalance_Throws()
     {
-        var storage = new InMemoryCashStorage();
-        await storage.SetBalanceAsync(0.50m);
-        var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-        await repository.SetStockAsync("COLA", 1);
+        var cashRepository = new InMemoryCashrepository();
+        await cashRepository.SetBalanceAsync(0.50m);
+        var inventoryRepository = new InMemoryInventoryRepository();
+        await inventoryRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
+        await inventoryRepository.SetStockAsync("COLA", 1);
 
-        var services = BuildServices(storage, repository);
+        var services = BuildServices(cashRepository, inventoryRepository);
         var orderService = services.GetRequiredService<IOrderService>();
 
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -53,13 +53,13 @@ public sealed class OrderPlacementTests
     [Fact]
     public async Task PlaceOrder_WithNoStock_Throws()
     {
-        var storage = new InMemoryCashStorage();
-        await storage.SetBalanceAsync(5.00m);
-        var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-        await repository.SetStockAsync("COLA", 0);
+        var cashRepository = new InMemoryCashrepository();
+        await cashRepository.SetBalanceAsync(5.00m);
+        var inventoryRepository = new InMemoryInventoryRepository();
+        await inventoryRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
+        await inventoryRepository.SetStockAsync("COLA", 0);
 
-        var services = BuildServices(storage, repository);
+        var services = BuildServices(cashRepository, inventoryRepository);
         var orderService = services.GetRequiredService<IOrderService>();
 
         await Assert.ThrowsAsync<InvalidOperationException>(
@@ -70,11 +70,12 @@ public sealed class OrderPlacementTests
     [Fact]
     public async Task PlaceOrder_WithUnknownProduct_Throws()
     {
-        var storage = new InMemoryCashStorage();
-        await storage.SetBalanceAsync(5.00m);
-        var repository = new InMemoryInventoryRepository();
+        var cashrepository = new InMemoryCashrepository();
+        await cashrepository.SetBalanceAsync(5.00m);
+        
+        var inventoryRepository = new InMemoryInventoryRepository();
 
-        var services = BuildServices(storage, repository);
+        var services = BuildServices(cashrepository, inventoryRepository);
         var orderService = services.GetRequiredService<IOrderService>();
 
         await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -85,14 +86,14 @@ public sealed class OrderPlacementTests
     [Fact]
     public async Task PlaceOrder_WithStockAndBalance_PublishesOrderConfirmedEvent()
     {
-        var storage = new InMemoryCashStorage();
-        await storage.SetBalanceAsync(5.00m);
+        var cashRepository = new InMemoryCashrepository();
+        await cashRepository.SetBalanceAsync(5.00m);
 
-        var repository = new InMemoryInventoryRepository();
-        await repository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
-        await repository.SetStockAsync("COLA", 2);
+        var inventoryRepository = new InMemoryInventoryRepository();
+        await inventoryRepository.AddOrUpdateAsync(new Product("COLA", "Coca Cola", 1.50m));
+        await inventoryRepository.SetStockAsync("COLA", 2);
 
-        var services = BuildServices(storage, repository);
+        var services = BuildServices(cashRepository, inventoryRepository);
         var orderService = services.GetRequiredService<IOrderService>();
         var eventCollector = services.GetRequiredService<OrderConfirmedEventCollector>();
 
@@ -104,15 +105,18 @@ public sealed class OrderPlacementTests
         Assert.True(publishedEvent.OrderedAt <= DateTimeOffset.UtcNow);
     }
 
-    private static ServiceProvider BuildServices(ICashStorage storage, IInventoryRepository repository)
+    private static ServiceProvider BuildServices(ICashRepository cashRepository, IInventoryRepository storageRepository)
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddCashRegisterModuleForTesting(storage);
-        services.AddInventoryModuleForTesting(repository);
+
+        services.AddCashRegisterModuleForTesting(cashRepository);
+        services.AddInventoryModuleForTesting(storageRepository);
         services.AddOrdersModuleForTesting();
+
         services.AddSingleton<OrderConfirmedEventCollector>();
         services.AddSingleton<INotificationHandler<OrderConfirmed>>(sp => sp.GetRequiredService<OrderConfirmedEventCollector>());
+        
         return services.BuildServiceProvider();
     }
 
