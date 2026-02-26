@@ -12,7 +12,7 @@ public sealed class CashRegisterTests
     [InlineData(5, 5, 10)]
     public async Task Insert_IncreasesBalance_FromExamples(decimal initialBalance, decimal amount, decimal expectedBalance)
     {
-        var cashRegisterService = BuildCashRegisterService(initialBalance);
+        var cashRegisterService = await BuildCashRegisterService(initialBalance);
 
         await cashRegisterService.Insert(amount);
 
@@ -22,7 +22,7 @@ public sealed class CashRegisterTests
     [Fact]
     public async Task Insert_IncreasesBalance()
     {
-        var cashRegisterService = BuildCashRegisterService();
+        var cashRegisterService = await BuildCashRegisterService();
 
         await cashRegisterService.Insert(2.50m);
 
@@ -32,7 +32,7 @@ public sealed class CashRegisterTests
     [Fact]
     public async Task Charge_DecreasesBalance()
     {
-        var cashRegisterService = BuildCashRegisterService(5.00m);
+        var cashRegisterService = await BuildCashRegisterService(5.00m);
 
         await cashRegisterService.Charge(1.25m);
 
@@ -41,7 +41,7 @@ public sealed class CashRegisterTests
 
 
 
-    private static ICashRegisterService BuildCashRegisterService(decimal initialBalance = 0)
+    private static async Task<ICashRegisterService> BuildCashRegisterService(decimal initialBalance = 0)
     {
         var serviceProvider = new ServiceCollection()
             .AddLogging()
@@ -50,7 +50,7 @@ public sealed class CashRegisterTests
 
         var repository = serviceProvider.GetRequiredService<ICashRepository>();
         
-        repository.SetBalanceAsync(initialBalance).GetAwaiter().GetResult();
+        await repository.SetBalanceAsync(initialBalance);
 
         return serviceProvider.GetRequiredService<ICashRegisterService>();
     }
