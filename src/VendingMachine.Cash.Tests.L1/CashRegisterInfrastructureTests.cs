@@ -1,16 +1,14 @@
-using MediatR;
-using Microsoft.Extensions.DependencyInjection;
 using VendingMachine.Persistence;
 using Xunit;
 
 namespace VendingMachine.Cash.Tests.L1;
 
 [Trait("Level", "L1")]
-public sealed class CashRegisterInfrastructureTests : IClassFixture<InfrastructureFixture>, IAsyncLifetime
+public sealed class PostgresCashRepositoryTests : IClassFixture<InfrastructureFixture>, IAsyncLifetime
 {
     private readonly InfrastructureFixture _fixture;
 
-    public CashRegisterInfrastructureTests(InfrastructureFixture fixture)
+    public PostgresCashRepositoryTests(InfrastructureFixture fixture)
     {
         _fixture = fixture;
     }
@@ -20,49 +18,82 @@ public sealed class CashRegisterInfrastructureTests : IClassFixture<Infrastructu
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task CashRegister_PersistsBalanceAcrossInstances_WithPostgresrepository()
+    public async Task EnsureCreatedAsync_CreatesSchemaAndTable()
     {
-        var repository1 = new PostgresCashRepository(_fixture.ConnectionString, new NullTransactionContext());
-        await repository1.EnsureCreatedAsync();
-        await repository1.SetBalanceAsync(0m);
+        // Arrange
+        var repository = CreateRepository();
 
-        var register1 = BuildRegister(repository1);
-        await register1.Insert(2.00m);
-        await register1.Charge(1.25m);
+        // Act
+        await repository.EnsureCreatedAsync();
 
-        Assert.Equal(0.75m, await register1.GetBalance());
-
-        var register2 = BuildRegister(new PostgresCashRepository(_fixture.ConnectionString, new NullTransactionContext()));
-        Assert.Equal(0.75m, await register2.GetBalance());
-
-        var refunded = await register2.RefundAll();
-        Assert.Equal(0.75m, refunded);
-
-        var register3 = BuildRegister(new PostgresCashRepository(_fixture.ConnectionString, new NullTransactionContext()));
-        Assert.Equal(0m, await register3.GetBalance());
+        // Assert: Should not throw and should create initial state
+        var balance = await repository.GetBalanceAsync();
+        Assert.Equal(0m, balance);
     }
 
-    private static CashRegisterService BuildRegister(ICashRepository repository)
+    [Fact]
+    public async Task GetBalanceAsync_ReturnsZero_WhenNoBalanceSet()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(repository);
-        services.AddSingleton<IUnitOfWork, NoOpUnitOfWork>();
-        services.AddLogging();
-        services.AddMediatR(typeof(CashRegisterService).Assembly);
-        services.AddSingleton<CashRegisterService>();
-        return services.BuildServiceProvider().GetRequiredService<CashRegisterService>();
+        // Arrange
+        var repository = CreateRepository();
+        await repository.EnsureCreatedAsync();
+
+        // Act
+        var balance = await repository.GetBalanceAsync();
+
+        // Assert
+        Assert.Equal(0m, balance);
     }
 
-    private sealed class NoOpUnitOfWork : IUnitOfWork
+    [Fact]
+    public async Task SetBalanceAsync_PersistsBalance()
     {
-        public Task ExecuteAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default) =>
-            action(cancellationToken);
+        // Arrange
+        var repository = CreateRepository();
+        await repository.EnsureCreatedAsync();
 
-        public Task<T> ExecuteAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default) =>
-            action(cancellationToken);
+        // Act
+        await repository.SetBalanceAsync(42.50m);
+
+        // Assert
+        var balance = await repository.GetBalanceAsync();
+        Assert.Equal(42.50m, balance);
     }
 
-    private sealed class NullTransactionContext : VendingMachine.Persistence.ITransactionContext
+    [Fact]
+    public async Task SetBalanceAsync_UpdatesExistingBalance()
+    {
+        // Arrange
+        var repository = CreateRepository();
+        await repository.EnsureCreatedAsync();
+        await repository.SetBalanceAsync(10.00m);
+
+        // Act
+        await repository.SetBalanceAsync(25.75m);
+
+        // Assert
+        var balance = await repository.GetBalanceAsync();
+        Assert.Equal(25.75m, balance);
+    }
+
+    [Fact]
+    public async Task SetBalanceAsync_ThrowsArgumentOutOfRangeException_WhenBalanceIsNegative()
+    {
+        // Arrange
+        var repository = CreateRepository();
+        await repository.EnsureCreatedAsync();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            async () => await repository.SetBalanceAsync(-1.00m));
+    }
+
+    
+
+    private PostgresCashRepository CreateRepository() =>
+        new(_fixture.ConnectionString, new NullTransactionContext());
+
+    private sealed class NullTransactionContext : ITransactionContext
     {
         public bool HasActiveTransaction => false;
 

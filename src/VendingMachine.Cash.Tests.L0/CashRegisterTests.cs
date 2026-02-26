@@ -12,43 +12,44 @@ public sealed class CashRegisterTests
     [InlineData(5, 5, 10)]
     public async Task Insert_IncreasesBalance_FromExamples(decimal initialBalance, decimal amount, decimal expectedBalance)
     {
-        var register = BuildCashRegisterService(initialBalance);
+        var cashRegisterService = BuildCashRegisterService(initialBalance);
 
-        await register.Insert(amount);
+        await cashRegisterService.Insert(amount);
 
-        Assert.Equal(expectedBalance, await register.GetBalance());
+        Assert.Equal(expectedBalance, await cashRegisterService.GetBalance());
     }
 
     [Fact]
     public async Task Insert_IncreasesBalance()
     {
-        var register = BuildCashRegisterService();
+        var cashRegisterService = BuildCashRegisterService();
 
-        await register.Insert(2.50m);
+        await cashRegisterService.Insert(2.50m);
 
-        Assert.Equal(2.50m, await register.GetBalance());
+        Assert.Equal(2.50m, await cashRegisterService.GetBalance());
     }
 
     [Fact]
     public async Task Charge_DecreasesBalance()
     {
-        var register = BuildCashRegisterService(5.00m);
+        var cashRegisterService = BuildCashRegisterService(5.00m);
 
-        await register.Charge(1.25m);
+        await cashRegisterService.Charge(1.25m);
 
-        Assert.Equal(3.75m, await register.GetBalance());
+        Assert.Equal(3.75m, await cashRegisterService.GetBalance());
     }
 
 
 
     private static ICashRegisterService BuildCashRegisterService(decimal initialBalance = 0)
     {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddCashRegisterModuleForTests();
+        var serviceProvider = new ServiceCollection()
+            .AddLogging()
+            .AddCashRegisterModuleForTests()
+            .BuildServiceProvider();
 
-        var serviceProvider = services.BuildServiceProvider();
         var repository = serviceProvider.GetRequiredService<ICashRepository>();
+        
         repository.SetBalanceAsync(initialBalance).GetAwaiter().GetResult();
 
         return serviceProvider.GetRequiredService<ICashRegisterService>();
