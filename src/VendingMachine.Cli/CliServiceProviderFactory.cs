@@ -5,6 +5,8 @@ using VendingMachine.Inventory;
 using VendingMachine.Inventory.Infrastructure;
 using VendingMachine.Orders;
 using VendingMachine.Persistence;
+using VendingMachine.Reporting;
+using VendingMachine.Reporting.Abstractions;
 
 internal static class CliServiceProviderFactory
 {
@@ -15,6 +17,7 @@ internal static class CliServiceProviderFactory
         services.AddInventoryModule();
         services.AddCashRegisterModule();
         services.AddOrdersModule();
+        services.AddReportingModule();
         services.AddPostgresPersistence(config.Postgres.ConnectionString);
 
         services.AddLogging(builder =>
@@ -34,6 +37,7 @@ internal static class CliServiceProviderFactory
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IReportingService, ReportingService>();
 
         return services.BuildServiceProvider();
     }

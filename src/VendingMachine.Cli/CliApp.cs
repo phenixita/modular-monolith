@@ -14,6 +14,7 @@ internal sealed class CliApp
         root.AddCommand(InventoryCommands.Build(_options));
         root.AddCommand(CashCommands.Build(_options));
         root.AddCommand(OrderCommands.Build(_options));
+        root.AddCommand(ReportingCommands.Build(_options));
 
         return root.InvokeAsync(args);
     }
